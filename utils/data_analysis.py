@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 import sklearn as sk
+from scipy import stats
 
 
 def compute_mean(image):
@@ -16,12 +17,12 @@ def compute_std(image):
 
 
 def compute_max(image):
-    pass
+    return np.amax(image, axis=0)
 
 
 def compute_min(image):
-    pass
+    return np.amin(image, axis=0)
 
 
 def compute_mode(image):
-    pass
+    return stats.mode(image, axis=0)
