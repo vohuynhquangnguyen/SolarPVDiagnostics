@@ -4,15 +4,15 @@ import sklearn as sk
 
 
 def compute_mean(image):
-    pass
+    return np.mean(image)
 
 
 def compute_median(image):
-    pass
+    return np.median(image)
 
 
 def compute_std(image):
-    pass
+    return np.std(image)
 
 
 def compute_max(image):
