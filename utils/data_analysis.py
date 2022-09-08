@@ -38,6 +38,18 @@ def compute_mode(image: np.ndarray) -> float:
     """
     @author: Vo, Huynh Quang Nguyen; Hoang, Anh Minh
     """
-    return stats.mode(image.flatten(), axis = 0)
+    return stats.mode(image.flatten(), axis = 0)[0]
 
-def compute_means_from_images()
+def compute_means_from_images(images):
+    """
+    @author: Vo, Huynh Quang Nguyen; Hoang, Anh Minh
+    """
+    means = []
+    for image in images:
+        mean = compute_mean(image)
+        means.append(mean)
+    
+    return np.array(means)
+
+def compute_median_from_images(image):
+    pass
