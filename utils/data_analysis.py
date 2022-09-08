@@ -39,3 +39,5 @@ def compute_mode(image: np.ndarray) -> float:
     @author: Vo, Huynh Quang Nguyen; Hoang, Anh Minh
     """
     return stats.mode(image.flatten(), axis = 0)
+
+def compute_means_from_images()
