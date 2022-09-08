@@ -8,7 +8,7 @@ def load_images_from_directory(images_directory: str, images_format: str) -> obj
     @author: Vo Huynh Quang Nguyen
     Load all images having the same format in a directory.
 
-    This function load_images_from_directory load all images having the same format in a directory by leveraging the Unix style pathname pattern expansion.
+    This function load_images_from_directory load all images having the same format in a directory by leveraging the Unix style pathname pattern expansion and return an array of images and 
     
     @param images_directory: Unix style pathname. The default value is './dataset/images'
     @param images_format : Unix style user-specific image format ('*.png', '*.jpg', '*.bmp', etc.).
@@ -21,7 +21,7 @@ def load_images_from_directory(images_directory: str, images_format: str) -> obj
         image = cv2.imread(image_fname, cv2.IMREAD_UNCHANGED)
         images.append(image)
         
-    return np.array(images)
+    return np.array(images), image_fnames
 
 def load_data_from_file(filepath: str, delimiter: str) -> object:
     """
