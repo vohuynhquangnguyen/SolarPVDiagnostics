@@ -43,7 +43,7 @@ def compute_mode(image: np.ndarray) -> float:
     """
     @author: Vo, Huynh Quang Nguyen; Hoang, Minh
     """
-    return stats.mode(image.flatten(), axis=0)[0]
+    return stats.mode(image.flatten(), axis=0)
 
 
 def compute_means_from_images(images):
@@ -98,5 +98,16 @@ def compute_mode_from_images(images):
     for image in images:
         mode = compute_mode(image)
         modes.append(mode)
-    return np.appray(modes)
+    return np.array(modes)
 
+
+def average_images(images):
+    avg_image = images[0]
+    for i in range(len(images)):
+        if i == 0:
+            pass
+        else:
+            alpha = 1.0 / (i + 1)
+            beta = 1.0 - alpha
+            avg_image = cv2.addWeighted(images[i], alpha, avg_image, beta, 0.0)
+    return avg_image
