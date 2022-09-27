@@ -54,16 +54,15 @@ def load_data_from_file(file_path: str) -> tuple[object, list, list]:
 
     return np.array(cell_images), metadata['cell_quality'], metadata['cell_types']
 
-def preprocess_data(data: object, labels: list) -> tuple[object, list]:
+def preprocess_data(data: object, labels: list, types: list) -> tuple[object, list]:
     """
     @author: Vo, Huynh Quang Nguyen
     """
 
-    preprocessed_data = data.astype('float32') / 255.0
-    preprocessed_data = np.stack((preprocessed_data,) * 3, axis = -1)
-    preprocessed_labels = labels.map(lambda value: 0.0 if value == 'good' else 1.0)
+    preprocessed_data = np.stack((data,) * 3, axis = -1)
+    preprocessed_labels = labels.map(lambda value: float(0.0) if value == 'good' else float(1.0))
 
     idx = np.random.permutation(preprocessed_data.shape[0])
-    X, Y = preprocessed_data[idx], preprocessed_labels[idx]
+    X, Y, Z = preprocessed_data[idx], preprocessed_labels[idx], types[idx]
     
-    return X, Y
+    return X, Y, Z
