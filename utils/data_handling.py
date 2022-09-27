@@ -2,6 +2,7 @@ import os
 import glob
 import cv2
 import numpy as np
+import pandas as pd
 
 def load_images_from_directory(images_directory: str, images_format: str) -> object:
     """
@@ -12,7 +13,9 @@ def load_images_from_directory(images_directory: str, images_format: str) -> obj
     
     @param images_directory: Unix style pathname. The default value is './dataset/images'
     @param images_format : Unix style user-specific image format ('*.png', '*.jpg', '*.bmp', etc.).
+    @return images: Array containing loaded images.
     """
+
     path = os.path.join(images_directory, images_format)
     image_fnames = glob.glob(path)
     
@@ -23,32 +26,44 @@ def load_images_from_directory(images_directory: str, images_format: str) -> obj
         
     return np.array(images)
 
-def load_data_from_file(filepath: str, delimiter: str) -> object:
+def load_data_from_file(file_path: str) -> tuple[object, list, list]:
     """
     @author: Vo, Huynh Quang Nguyen
     Load images, labels, and other features from a file. 
 
-    This function load_data_from_file load the dataset from a .txt or .csv file containing all necessary information including <path/to/data_points>, <data_points_class>, and <other/features>.
+    This function load_data_from_file load the dataset from a .txt or .csv file containing all necessary information including:
+    1. <path/to/data_points>,
+    2. <data_points_class>, and 
+    3. <other/features>.
 
-    @param filepath: User-specified path to file containing dataset information. 
-    @param delimiter: Delimiter (e.g., ',', ' ', '\t', '\v', etc.).
+    @param file_path: User-specified path to file containing dataset information.
+    @return cell_images: Array containing loaded images.
+    @return cell_quality: List containing corresponding class.
+    @return cell_types: List containing corresponding type.
+    """
+    metadata = pd.read_csv(file_path, delim_whitespace = True, header = None)
+    metadata.columns = ['cell_path', 'cell_quality', 'cell_types']
+
+    cell_images = []
+    for cell_path in metadata['cell_path']:
+        cell_path = os.path.join('data', cell_path)
+        image = cv2.imread(cell_path, cv2.IMREAD_UNCHANGED)
+        cell_images.append(image)
+
+    metadata.cell_quality = metadata['cell_quality'].map(lambda value: 'bad' if value > 0 else 'good')
+
+    return np.array(cell_images), metadata['cell_quality'], metadata['cell_types']
+
+def preprocess_data(data: object, labels: list) -> tuple[object, list]:
+    """
+    @author: Vo, Huynh Quang Nguyen
     """
 
-    with open(filepath, 'r') as f:
-        lines = f.read().splitlines()
-        n_columns = len(lines[0].split(delimiter))
+    preprocessed_data = data.astype('float32') / 255.0
+    preprocessed_data = np.stack((preprocessed_data,) * 3, axis = -1)
+    preprocessed_labels = labels.map(lambda value: 0.0 if value == 'good' else 1.0)
 
-        if (n_columns == 3):
-            images = []
-            labels = []
-            cells_type = []
-
-            for line in lines:
-                path, label, type = line.split(delimiter)
-                image = cv2.imread(path, cv2.IMREAD_UNCHANGED)
-                images.append(image)
-                labels.append(label)
-                cells_type.append(type)
-            return images, labels, cells_type
-        else:
-            pass
+    idx = np.random.permutation(preprocessed_data.shape[0])
+    X, Y = preprocessed_data[idx], preprocessed_labels[idx]
+    
+    return X, Y
