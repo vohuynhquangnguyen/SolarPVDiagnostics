@@ -1,8 +1,10 @@
 import time
+from tkinter import Image
 import tensorflow as tf
 import numpy as np
 from keras import Model, layers, regularizers, optimizers
 from keras.callbacks import ModelCheckpoint
+from keras.preprocessing.image import ImageDataGenerator
 from keras.utils import plot_model
 from keras.applications import VGG19, ResNet152V2, InceptionResNetV2, EfficientNetB7
 import keras.backend as K
@@ -27,6 +29,15 @@ def configure_training_policy():
             print(error)
 
     return None
+
+def data_augmentation() -> object:
+    """
+    @author: Vo, Huynh Quang Nguyen
+    """
+    datagen = ImageDataGenerator(rotation_range = 10, zoom_range = 0.05,
+        width_shift_range = 0.05, height_shift_range = 0.05, fill_mode = 'nearest',
+        shear_range = 0.05, horizontal_flip = True, vertical_flip = True)
+    return datagen
 
 def train_classification_model(model: object, model_name: str, version: str, X: object, Y: object, 
     metric_to_monitor: str, no_of_epochs: int, batch_size: int, validation_split_ratio: float) -> tuple[object, float]:
