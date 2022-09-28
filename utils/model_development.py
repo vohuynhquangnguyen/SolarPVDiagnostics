@@ -33,6 +33,8 @@ def train_classification_model(model: object, model_name: str, version: str, X: 
     """
     @author: Vo, Huynh Quang Nguyen
     """
+    
+    K.clear_session()
     start_time = time.time()
     ###
     weight_path = f'weights/{model_name}_{version}.hdf5'
