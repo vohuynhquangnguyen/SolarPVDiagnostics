@@ -30,15 +30,6 @@ def configure_training_policy():
 
     return None
 
-def data_augmentation() -> object:
-    """
-    @author: Vo, Huynh Quang Nguyen
-    """
-    datagen = ImageDataGenerator(rotation_range = 10, zoom_range = 0.05,
-        width_shift_range = 0.05, height_shift_range = 0.05, fill_mode = 'nearest',
-        shear_range = 0.05, horizontal_flip = True, vertical_flip = True)
-    return datagen
-
 def train_classification_model(model: object, model_name: str, version: str, X: object, Y: object, 
     metric_to_monitor: str, no_of_epochs: int, batch_size: int, validation_split_ratio: float) -> tuple[object, float]:
     """
@@ -78,11 +69,26 @@ def vgg19(input_shape: tuple, display_model_information: bool) -> object:
     """
 
     inputs = layers.Input(shape = input_shape, name = 'inputs')
+    ##
+    # Normalization and Augmentation:
+    #
     rescaling = layers.Rescaling(1./255)(inputs)
-    vggmodel = VGG19(include_top = False, input_tensor = rescaling, weights = 'imagenet')
+    augmented = layers.RandomFlip()(rescaling)
+    augmented = layers.RandomRotation(factor = 0.05, fill_mode = 'nearest', interpolation = 'bilinear')(augmented)
+    augmented = layers.RandomZoom(height_factor = 0.05, width_factor = 0.05)(augmented)
+    augmented = layers.RandomTranslation(height_factor = 0.05, width_factor = 0.05, fill_mode = 'nearest', interpolation = 'bilinear')(augmented)
+
+    ##
+    # Backend:
+    #
+    vggmodel = VGG19(include_top = False, input_tensor = augmented, weights = 'imagenet')
     vggmodel.trainable = False
     x = vggmodel.output
     x = layers.GlobalAveragePooling2D(name = 'globavgpool')(x)
+
+    ##
+    # Frontend:
+    #
     x = layers.Dense(4096, activation = 'relu', kernel_initializer = 'he_uniform',
         kernel_regularizer=regularizers.L1L2(l1 = 1e-5, l2 = 1e-4), 
         bias_regularizer=regularizers.L2(1e-4),
