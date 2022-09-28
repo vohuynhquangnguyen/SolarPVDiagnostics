@@ -1,7 +1,7 @@
 import time
 import tensorflow as tf
 import numpy as np
-from keras import Model, layers, optimizers
+from keras import Model, layers, regularizers, optimizers
 from keras.callbacks import ModelCheckpoint
 from keras.utils import plot_model
 from keras.applications import VGG19, ResNet152V2, InceptionResNetV2, EfficientNetB7
@@ -52,25 +52,50 @@ def train_classification_model(model: object, model_name: str, version: str, X: 
 ########################
 # CLASSIFICATION MODEL #
 ########################
-def vgg19(input_shape: tuple) -> object:
+def vgg19(input_shape: tuple, display_model_information: bool) -> object:
     """
     @author: Vo, Huynh Quang Nguyen
+
+    Create a customized VGG19 binary classification model.
+
+    This method vgg19 creates a transfer-learning customized VGG19 binary classification model. If prompted by users, the model's information will be printed on the display.
+
+    @param input_shape. Dimension of input data in the format of (height, width, channels). Minimum supported dimension is (300, 300, 3).
+    @param display_model_information. Whether to display model's information.
     """
+
     inputs = layers.Input(shape = input_shape, name = 'inputs')
     rescaling = layers.Rescaling(1./255)(inputs)
     vggmodel = VGG19(include_top = False, input_tensor = rescaling, weights = 'imagenet')
     vggmodel.trainable = False
     x = vggmodel.output
     x = layers.GlobalAveragePooling2D(name = 'globavgpool')(x)
-    x = layers.Dense(4096, activation = 'relu', name = 'dense1')(x)
-    x = layers.Dense(4096, activation = 'relu', name = 'dense2')(x)
-    x = layers.Dense(512, activation = 'relu', name = 'dense3')(x)
-    outputs = layers.Dense(1, activation = 'sigmoid', name = 'outputs')(x)
+    x = layers.Dense(4096, activation = 'relu', kernel_initializer = 'he_uniform',
+        kernel_regularizer=regularizers.L1L2(l1 = 1e-5, l2 = 1e-4), 
+        bias_regularizer=regularizers.L2(1e-4),
+        activity_regularizer=regularizers.L2(1e-5), name = 'dense1')(x)
+    x = layers.Dense(4096, activation = 'relu', kernel_initializer = 'he_uniform',
+        kernel_regularizer=regularizers.L1L2(l1 = 1e-5, l2 = 1e-4), 
+        bias_regularizer=regularizers.L2(1e-4),
+        activity_regularizer=regularizers.L2(1e-5), name = 'dense2')(x)    
+    x = layers.Dense(1000, activation = 'relu', kernel_initializer = 'he_uniform',
+        kernel_regularizer=regularizers.L1L2(l1 = 1e-5, l2 = 1e-4), 
+        bias_regularizer=regularizers.L2(1e-4),
+        activity_regularizer=regularizers.L2(1e-5), name = 'dense3')(x)    
+    x = layers.Dense(512, activation = 'relu', kernel_initializer = 'he_uniform',
+        kernel_regularizer=regularizers.L1L2(l1 = 1e-5, l2 = 1e-4), 
+        bias_regularizer=regularizers.L2(1e-4),
+        activity_regularizer=regularizers.L2(1e-5), name = 'dense4')(x)    
+    outputs = layers.Dense(1, activation = 'sigmoid', 
+        kernel_initializer = 'he_uniform', name = 'outputs')(x)
     model = Model(inputs = inputs, outputs = outputs, name = 'VGG19')
     
-    model.compile(loss = 'binary_crossentropy', optimizer = optimizers.Adam(learning_rate = 0.0001), 
-                  metrics = ['accuracy', 'Precision', 'Recall'])
-    model.summary()
+    model.compile(loss = 'binary_crossentropy', 
+        optimizer = optimizers.Adam(learning_rate = 0.0001), 
+        metrics = ['accuracy', 'Precision', 'Recall'])
+    
+    if (display_model_information == True):
+        model.summary()
 
     return model
 
