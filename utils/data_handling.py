@@ -8,6 +8,7 @@ import pandas as pd
 def load_images_from_directory(images_directory: str, images_format: str) -> object:
     """
     @author: Vo Huynh Quang Nguyen
+    
     Load all images having the same format in a directory.
 
     This method load_images_from_directory load all images having the same format in a directory by leveraging the Unix style pathname pattern expansion.
@@ -30,6 +31,7 @@ def load_images_from_directory(images_directory: str, images_format: str) -> obj
 def load_data_from_file(file_path: str, run_on_notebook: bool) -> tuple[object, object, object]:
     """
     @author: Vo, Huynh Quang Nguyen
+    
     Load images, labels, and other features from a file. 
 
     This method load_data_from_file load the dataset from a .txt or .csv file containing all necessary information including <path/to/data_points>, <data_points_class>, and <other/features>.
@@ -60,6 +62,13 @@ def preprocess_data(data: object, labels: object, types: object) -> tuple[object
     object]:
     """
     @author: Vo, Huynh Quang Nguyen
+
+    Preprocess the data.
+
+    This method preprocess_data applys several preprocessing methods to the given dataset such that:
+    1. All grayscale images are transformed into pseudo-RGB images.
+    2. All image classes (good vs. bad) are one-hot encoded (0.0 vs 1.0, respectively).
+    3. All data points are randomly shuffled.
     """
 
     preprocessed_data = np.stack((data,) * 3, axis = -1)
