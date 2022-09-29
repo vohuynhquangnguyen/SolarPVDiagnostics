@@ -80,7 +80,7 @@ def vgg19(input_shape: tuple, display_model_information: bool) -> object:
 
     This method vgg19 creates a transfer-learning customized VGG19 binary classification model. If prompted by users, the model's information will be printed on the display.
 
-    @param input_shape. Dimension of input data in the format of (height, width, channels). Minimum supported dimension is (64, 64, 3).
+    @param input_shape. Dimension of input data in the format of (height, width, channels). Minimum supported dimension is (32, 32, 3).
     @param display_model_information. Whether to display model's information.
     """
 
@@ -120,7 +120,7 @@ def resnet152v2(input_shape: tuple, display_model_information: bool) -> object:
 
     This method resnet152v2 creates a transfer-learning customized ResNet152v2 binary classification model. If prompted by users, the model's information will be printed on the display.
 
-    @param input_shape. Dimension of input data in the format of (height, width, channels). Minimum supported dimension is (300, 300, 3).
+    @param input_shape. Dimension of input data in the format of (height, width, channels). Minimum supported dimension is (32, 32, 3).
     @param display_model_information. Whether to display model's information.
     """
     
@@ -151,9 +151,17 @@ def resnet152v2(input_shape: tuple, display_model_information: bool) -> object:
 def inception_resnetv2(input_shape: tuple, display_model_information: bool) -> object:
     """
     @author: Vo, Huynh Quang Nguyen
-    """
-    K.clear_session()
 
+    Create a customized InceptionResNetv2 binary classification model.
+
+    This method inception_resnetv2 creates a transfer-learning customized InceptionResNetv2 binary classification model. If prompted by users, the model's information will be printed on the display.
+
+    @param input_shape. Dimension of input data in the format of (height, width, channels). Minimum supported dimension is (75, 75, 3).
+    @param display_model_information. Whether to display model's information.
+
+    """
+    
+    K.clear_session()
     inputs = layers.Input(shape = input_shape)
     normalized_augmented = normalize_and_augmentation(inputs)
     convolutional_base = InceptionResNetV2(include_top = False, 
@@ -173,7 +181,7 @@ def inception_resnetv2(input_shape: tuple, display_model_information: bool) -> o
 
     return model
 
-def efficientnetB7(input_shape: tuple, model_name: str, visualize_model: bool = False) -> object:
+def efficientnetB7(input_shape: tuple, display_model_information: bool) -> object:
     """
     @author: Vo, Huynh Quang Nguyen
     """
@@ -185,16 +193,14 @@ def efficientnetB7(input_shape: tuple, model_name: str, visualize_model: bool = 
     x = convolutional_base.get_layer(-1).output
     x = layers.GlobalAveragePooling2D(name = 'globavgpool')(x)
     x = layers.Dense(4096, activation = 'relu', name = 'dense1')(x)
-    x = layers.Dropout(0.2)(x)
     x = layers.Dense(4096, activation = 'relu', name = 'dense2')(x)
-    x = layers.Dropout(0.2)(x)
-    x = layers.Dense(512, activation = 'relu', name = 'dense3')(x)    
+    x = layers.Dense(1000, activation = 'relu', name = 'dense3')(x)
+    x = layers.Dense(512, activation = 'relu', name = 'dense4')(x)    
     outputs = layers.Dense(1, activation = 'sigmoid', name = 'output')(x)
     model = Model(inputs = inputs, outputs = outputs)
     
-    if (visualize_model == True):
-        plot_model(model, to_file = f'./docs/{model_name}.png', show_shapes = True, show_dtype = True, 
-        show_layer_names = True)
+    if (display_model_information == True):
+        model.summary()
     return model
 
 ########################
