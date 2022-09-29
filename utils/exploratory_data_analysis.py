@@ -1,47 +1,58 @@
-import cv2
 import numpy as np
-import sklearn as sk
 from scipy import stats
+from sklearn.decomposition import PCA
 
-def compute_statistical_parameters(images: object) -> tuple[]:
+def compute_statistical_parameters(images: object) -> tuple[object, object, object, object, object, object]:
     """
     @author: Vo, Huynh Quang Nguyen; Hoang, Minh
 
-    Compute statistical parameters of an input image.
+    Compute statistical parameters image-by-image from a given dataset.
     """
-    means, medians, stds, modes, maxs, mins = [], [], [], [], [], [], []
+
+    means = np.array([np.mean(image.ravel()) for image in images])
+    median = np.array([np.median(image.ravel()) for image in images])
+    stds = np.array([np.std(image.ravel()) for image in images])
+    maxs = np.array([np.amax(image.ravel(), axis = 0) for image in images])
+    mins = np.array([np.amin(image.ravel(), axis = 0) for image in images])
+    modes = np.array([stats.mode(image.ravel(), axis = 0) for image in images])
+
+    return means, median, stds, maxs, mins, modes
+
+def compute_average_image(images: object) -> object:
+    """
+    @author: Vo, Huynh Quang Nguyen; Hoang, Minh
+
+    Compute an average image from a given dataset.
+    """
+    average_image = np.zeros(images[0].shape)
 
     for image in images:
-        mean = np.mean(image.flatten())
-        means.append(mean)
+        average_image = np.add(average_image, image)
+    
+    average_image /= images.shape[0]
 
-        median = np.median(image.flatten())
-        medians.append(median)
+    return average_image
 
-        std = np.std(image.flatten())
-        stds.append(std)
-
-        amax = np.amax(image.flatten(), axis = 0)
-        maxs.append(amax)
-
-        amin = np.amin(image.flatten(), axis = 0)
-        mins.append(amin)
-
-        mode = stats.mode(image.flatten(), axis = 0)
-        modes.append(mode)
-
-    return means, medians, stds, maxs, mins, modes
-
-def average_image(images):
+def compute_image_embedding(images: object, n_of_components: int):
     """
     @author: Vo, Huynh Quang Nguyen
     """
-    avg_image = images[0]
-    for i in range(len(images)):
-        if i == 0:
-            pass
-        else:
-            alpha = 1.0 / (i + 1)
-            beta = 1.0 - alpha
-            avg_image = cv2.addWeighted(images[i], alpha, avg_image, beta, 0.0)
-    return avg_image
+    flatten_images = np.array([image.ravel() for image in images])
+    pca = PCA(n_of_components) 
+    transformed_images = pca.fit_transform(flatten_images.data)
+    
+    return transformed_images
+
+def compute_eigenimages(images: object, explained_variance_ratio: float):
+    """
+    @author: Vo, Huynh Quang Nguyen
+    """
+    assert (explained_variance_ratio >= 0.0) and (explained_variance_ratio <= 1.0), \
+        print('The ratio must higher than 0.0 and lower than 1.1')
+
+    flatten_images = np.array([image.ravel() for image in images])
+    pca = PCA(explained_variance_ratio) 
+    transformed_images = pca.fit_transform(flatten_images.data)
+
+    return transformed_images
+
