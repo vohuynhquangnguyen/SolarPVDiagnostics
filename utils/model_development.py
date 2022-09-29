@@ -53,6 +53,22 @@ def train_classification_model(model: object, model_name: str, version: str, X: 
     return history, training_time
 
 
+#####################
+# SUPPORTING LAYERS #
+#####################
+def normalize_and_augmentation(input_tensor: object) -> object:
+    """
+    @author: Vo, Huynh Quang Nguyen
+    """
+    rescaling = layers.Rescaling(1./255)(input_tensor)
+    flipping = layers.RandomFlip()(rescaling)
+    rotating = layers.RandomRotation(factor = (-0.5,0.5), 
+        fill_mode = 'nearest', interpolation = 'bilinear')(flipping)
+    zooming = layers.RandomZoom(height_factor = 0.02, width_factor = 0.02)(rotating)
+    output_tensor = layers.RandomTranslation(height_factor = 0.02, width_factor = 0.02, fill_mode = 'nearest', interpolation = 'bilinear')(zooming)
+
+    return output_tensor
+
 ########################
 # CLASSIFICATION MODEL #
 ########################
@@ -64,52 +80,27 @@ def vgg19(input_shape: tuple, display_model_information: bool) -> object:
 
     This method vgg19 creates a transfer-learning customized VGG19 binary classification model. If prompted by users, the model's information will be printed on the display.
 
-    @param input_shape. Dimension of input data in the format of (height, width, channels). Minimum supported dimension is (300, 300, 3).
+    @param input_shape. Dimension of input data in the format of (height, width, channels). Minimum supported dimension is (64, 64, 3).
     @param display_model_information. Whether to display model's information.
     """
 
     K.clear_session()
     inputs = layers.Input(shape = input_shape, name = 'inputs')
-  
-    ##
-    # Normalization and Augmentation:
-    #
-    rescaling = layers.Rescaling(1./255)(inputs)
-    augmented = layers.RandomFlip()(rescaling)
-    augmented = layers.RandomRotation(factor = (-0.5,0.5), 
-        fill_mode = 'nearest', interpolation = 'bilinear')(augmented)
-    augmented = layers.RandomZoom(height_factor = 0.02, width_factor = 0.02)(augmented)
-    augmented = layers.RandomTranslation(height_factor = 0.02, width_factor = 0.02, fill_mode = 'nearest', interpolation = 'bilinear')(augmented)
-
-    ##
-    # Backend:
-    #
-    vggmodel = VGG19(include_top = False, input_tensor = augmented, weights = 'imagenet')
+    normalized_augmented = normalize_and_augmentation(inputs)
+    vggmodel = VGG19(include_top = False, input_tensor = normalized_augmented, weights = 'imagenet')
     vggmodel.trainable = False
     x = vggmodel.output
     x = layers.GlobalAveragePooling2D(name = 'globavgpool')(x)
-
-    ##
-    # Frontend:
-    #
-    x = layers.Dense(4096, activation = 'relu', kernel_initializer = 'he_uniform',
-        kernel_regularizer=regularizers.L1L2(l1 = 1e-5, l2 = 1e-4), 
-        bias_regularizer=regularizers.L2(1e-4),
-        activity_regularizer=regularizers.L2(1e-5), name = 'dense1')(x)
-    x = layers.Dense(4096, activation = 'relu', kernel_initializer = 'he_uniform',
-        kernel_regularizer=regularizers.L1L2(l1 = 1e-5, l2 = 1e-4), 
-        bias_regularizer=regularizers.L2(1e-4),
-        activity_regularizer=regularizers.L2(1e-5), name = 'dense2')(x)    
-    x = layers.Dense(1000, activation = 'relu', kernel_initializer = 'he_uniform',
-        kernel_regularizer=regularizers.L1L2(l1 = 1e-5, l2 = 1e-4), 
-        bias_regularizer=regularizers.L2(1e-4),
-        activity_regularizer=regularizers.L2(1e-5), name = 'dense3')(x)    
-    x = layers.Dense(512, activation = 'relu', kernel_initializer = 'he_uniform',
-        kernel_regularizer=regularizers.L1L2(l1 = 1e-5, l2 = 1e-4), 
-        bias_regularizer=regularizers.L2(1e-4),
-        activity_regularizer=regularizers.L2(1e-5), name = 'dense4')(x)    
-    outputs = layers.Dense(1, activation = 'sigmoid', 
-        kernel_initializer = 'he_uniform', name = 'outputs')(x)
+    x = layers.Dense(4096, activation = 'relu', kernel_initializer = 'he_normal', 
+        name = 'dense1')(x)
+    x = layers.Dense(4096, activation = 'relu', kernel_initializer = 'he_normal',
+        name = 'dense2')(x)    
+    x = layers.Dense(1000, activation = 'relu', kernel_initializer = 'he_normal',
+        name = 'dense3')(x)    
+    x = layers.Dense(512, activation = 'relu', kernel_initializer = 'he_normal',
+         name = 'dense4')(x)    
+    outputs = layers.Dense(1, activation = 'sigmoid', kernel_initializer = 'he_normal', 
+        name = 'outputs')(x)
     model = Model(inputs = inputs, outputs = outputs, name = 'VGG19')
     
     model.compile(loss = 'binary_crossentropy', 
@@ -121,71 +112,64 @@ def vgg19(input_shape: tuple, display_model_information: bool) -> object:
 
     return model
 
-def resnet152v2(input_shape: tuple, model_name: str, visualize_model: bool) -> object:
+def resnet152v2(input_shape: tuple, display_model_information: bool) -> object:
     """
     @author: Vo, Huynh Quang Nguyen
+
+    Create a customized ResNet152v2 binary classification model.
+
+    This method resnet152v2 creates a transfer-learning customized ResNet152v2 binary classification model. If prompted by users, the model's information will be printed on the display.
+
+    @param input_shape. Dimension of input data in the format of (height, width, channels). Minimum supported dimension is (300, 300, 3).
+    @param display_model_information. Whether to display model's information.
     """
     
     K.clear_session()
     inputs = layers.Input(shape = input_shape)
-    
-    ##
-    # Normalization and Augmentation:
-    #
-    rescaling = layers.Rescaling(1./255)(inputs)
-    augmented = layers.RandomFlip()(rescaling)
-    augmented = layers.RandomRotation(factor = (-0.5,0.5), 
-        fill_mode = 'nearest', interpolation = 'bilinear')(augmented)
-    augmented = layers.RandomZoom(height_factor = 0.02, width_factor = 0.02)(augmented)
-    augmented = layers.RandomTranslation(height_factor = 0.02, width_factor = 0.02, fill_mode = 'nearest', interpolation = 'bilinear')(augmented)
-
-    ##
-    # Backend:
-    #
-    convolutional_base = ResNet152V2(include_top = False, input_tensor = augmented, weights = 'imagenet')
-    convolutional_base.trainable = True
+    normalized_augmented = normalize_and_augmentation(inputs)
+    convolutional_base = ResNet152V2(include_top = False, input_tensor = normalized_augmented,
+        weights = 'imagenet')
+    convolutional_base.trainable = False
     x = convolutional_base.get_layer(-1).output
-
-    ##
-    #
-    #
     x = layers.GlobalAveragePooling2D(name = 'globavgpool')(x)
     x = layers.Dense(4096, activation = 'relu', name = 'dense1')(x)
-    x = layers.Dropout(0.2)(x)
     x = layers.Dense(4096, activation = 'relu', name = 'dense2')(x)
-    x = layers.Dropout(0.2)(x)
-    x = layers.Dense(512, activation = 'relu', name = 'dense3')(x)    
+    x = layers.Dense(1000, activation = 'relu', name = 'dense3')(x)
+    x = layers.Dense(512, activation = 'relu', name = 'dense4')(x)    
     outputs = layers.Dense(1, activation = 'sigmoid', name = 'output')(x)
-    model = Model(inputs = inputs, outputs = outputs)
+    model = Model(inputs = inputs, outputs = outputs, name = 'ResNet152v2')
     
-    if (visualize_model == True):
-        plot_model(model, to_file = f'./docs/{model_name}.png', show_shapes = True, show_dtype = True, 
-        show_layer_names = True)
+    model.compile(loss = 'binary_crossentropy', 
+        optimizer = optimizers.Adam(learning_rate = 0.0001), 
+        metrics = ['accuracy', 'Precision', 'Recall'])
+
+    if (display_model_information == True):
+        model.summary()
 
     return model
 
-def inception_resnetv2(input_shape: tuple, model_name: str, visualize_model: bool = False) -> object:
+def inception_resnetv2(input_shape: tuple, display_model_information: bool) -> object:
     """
     @author: Vo, Huynh Quang Nguyen
     """
     K.clear_session()
 
     inputs = layers.Input(shape = input_shape)
-    convolutional_base = InceptionResNetV2(include_top = False, input_tensor = inputs, weights = 'imagenet')
-    convolutional_base.trainable = True
+    normalized_augmented = normalize_and_augmentation(inputs)
+    convolutional_base = InceptionResNetV2(include_top = False, 
+        input_tensor = normalized_augmented, weights = 'imagenet')
+    convolutional_base.trainable = False
     x = convolutional_base.get_layer(-1).output
     x = layers.GlobalAveragePooling2D(name = 'globavgpool')(x)
     x = layers.Dense(4096, activation = 'relu', name = 'dense1')(x)
-    x = layers.Dropout(0.2)(x)
     x = layers.Dense(4096, activation = 'relu', name = 'dense2')(x)
-    x = layers.Dropout(0.2)(x)
-    x = layers.Dense(512, activation = 'relu', name = 'dense3')(x)    
+    x = layers.Dense(1000, activation = 'relu', name = 'dense3')(x)
+    x = layers.Dense(512, activation = 'relu', name = 'dense4')(x)    
     outputs = layers.Dense(1, activation = 'sigmoid', name = 'output')(x)
-    model = Model(inputs = inputs, outputs = outputs)
+    model = Model(inputs = inputs, outputs = outputs, name = 'InceptionResNetv2')
     
-    if (visualize_model == True):
-        plot_model(model, to_file = f'./docs/{model_name}.png', show_shapes = True, show_dtype = True, 
-        show_layer_names = True)
+    if (display_model_information == True):
+        model.summary()
 
     return model
 
