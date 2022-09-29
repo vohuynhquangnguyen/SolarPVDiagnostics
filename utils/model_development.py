@@ -68,15 +68,18 @@ def vgg19(input_shape: tuple, display_model_information: bool) -> object:
     @param display_model_information. Whether to display model's information.
     """
 
+    K.clear_session()
     inputs = layers.Input(shape = input_shape, name = 'inputs')
+  
     ##
     # Normalization and Augmentation:
     #
     rescaling = layers.Rescaling(1./255)(inputs)
     augmented = layers.RandomFlip()(rescaling)
-    augmented = layers.RandomRotation(factor = 0.05, fill_mode = 'nearest', interpolation = 'bilinear')(augmented)
-    augmented = layers.RandomZoom(height_factor = 0.05, width_factor = 0.05)(augmented)
-    augmented = layers.RandomTranslation(height_factor = 0.05, width_factor = 0.05, fill_mode = 'nearest', interpolation = 'bilinear')(augmented)
+    augmented = layers.RandomRotation(factor = (-0.5,0.5), 
+        fill_mode = 'nearest', interpolation = 'bilinear')(augmented)
+    augmented = layers.RandomZoom(height_factor = 0.02, width_factor = 0.02)(augmented)
+    augmented = layers.RandomTranslation(height_factor = 0.02, width_factor = 0.02, fill_mode = 'nearest', interpolation = 'bilinear')(augmented)
 
     ##
     # Backend:
@@ -124,11 +127,28 @@ def resnet152v2(input_shape: tuple, model_name: str, visualize_model: bool) -> o
     """
     
     K.clear_session()
-		
     inputs = layers.Input(shape = input_shape)
-    convolutional_base = ResNet152V2(include_top = False, input_tensor = inputs, weights = 'imagenet')
+    
+    ##
+    # Normalization and Augmentation:
+    #
+    rescaling = layers.Rescaling(1./255)(inputs)
+    augmented = layers.RandomFlip()(rescaling)
+    augmented = layers.RandomRotation(factor = (-0.5,0.5), 
+        fill_mode = 'nearest', interpolation = 'bilinear')(augmented)
+    augmented = layers.RandomZoom(height_factor = 0.02, width_factor = 0.02)(augmented)
+    augmented = layers.RandomTranslation(height_factor = 0.02, width_factor = 0.02, fill_mode = 'nearest', interpolation = 'bilinear')(augmented)
+
+    ##
+    # Backend:
+    #
+    convolutional_base = ResNet152V2(include_top = False, input_tensor = augmented, weights = 'imagenet')
     convolutional_base.trainable = True
     x = convolutional_base.get_layer(-1).output
+
+    ##
+    #
+    #
     x = layers.GlobalAveragePooling2D(name = 'globavgpool')(x)
     x = layers.Dense(4096, activation = 'relu', name = 'dense1')(x)
     x = layers.Dropout(0.2)(x)
