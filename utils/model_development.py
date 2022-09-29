@@ -39,13 +39,13 @@ def train_classification_model(model: object, model_name: str, version: str, X: 
     K.clear_session()
     start_time = time.time()
     ###
-    weight_path = f'weights/{model_name}_{version}.hdf5'
+    weight_path = f'../models/weights/{model_name}_{version}.hdf5'
     checkpoint = ModelCheckpoint(weight_path, monitor = metric_to_monitor, 
         verbose = 1, save_best_only = True, mode = 'max')
     callbacks_list = [checkpoint]
     history = model.fit(X, Y, validation_split = validation_split_ratio, epochs = no_of_epochs, 
         batch_size = batch_size, callbacks = callbacks_list, verbose = 1)
-    np.save(f'{model_name}_history.npy', history.history)
+    np.save(f'../models/history/{model_name}_{version}', history.history)
     ###
     end_time = time.time()
 
@@ -184,7 +184,15 @@ def inception_resnetv2(input_shape: tuple, display_model_information: bool) -> o
 def efficientnetB7(input_shape: tuple, display_model_information: bool) -> object:
     """
     @author: Vo, Huynh Quang Nguyen
+
+    Create a customized EfficientNetB7 binary classification model.
+
+    This method efficientnetB7 creates a transfer-learning customized EfficientNetB7 binary classification model. If prompted by users, the model's information will be printed on the display.
+
+    @param input_shape. Dimension of input data in the format of (height, width, channels). Minimum supported dimension is (64, 64, 3).
+    @param display_model_information. Whether to display model's information.
     """
+    
     K.clear_session()
 
     inputs = layers.Input(shape = input_shape)
