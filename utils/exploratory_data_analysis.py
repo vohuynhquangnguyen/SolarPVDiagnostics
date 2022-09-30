@@ -33,15 +33,31 @@ def compute_average_image(images: object) -> object:
 
     return average_image
 
-def compute_image_embedding(images: object, n_of_components: int):
+def compute_image_embeddings(images: object, labels: object, types: object, n_of_components: int):
     """
     @author: Vo, Huynh Quang Nguyen
     """
     flatten_images = np.array([image.ravel() for image in images])
     pca = PCA(n_of_components) 
-    transformed_images = pca.fit_transform(flatten_images.data)
+    embeddings = pca.fit_transform(flatten_images.data)
     
-    return transformed_images
+    embedding_classes = []
+    for label, type in zip(list(labels), list(types)):
+        if label == 0.0 and type == 'mono':
+            embedding_class = 'mono-functional'
+        elif label == 0.0 and type == 'poly':
+            embedding_class = 'poly-functional'
+        elif label == 1.0 and type == 'mono':
+            embedding_class = 'mono-defective'
+        elif label == 1.0 and type == 'poly':
+            embedding_class = 'poly-defective'
+        elif (label == 0.3333333333333333 or label == 0.6666666666666666) and type == 'mono':
+            embedding_class = 'mono-marginally-defective'
+        elif (label == 0.3333333333333333 or label == 0.6666666666666666) and type == 'poly':
+            embedding_class = 'poly-marginally-defective'
+        embedding_classes.append(embedding_class)
+
+    return embeddings, embedding_classes
 
 def compute_eigenimages(images: object, explained_variance_ratio: float):
     """
