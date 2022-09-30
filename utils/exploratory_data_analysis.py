@@ -51,8 +51,9 @@ def compute_eigenimages(images: object, explained_variance_ratio: float):
         print('The ratio must higher than 0.0 and lower than 1.1')
 
     flatten_images = np.array([image.ravel() for image in images])
-    pca = PCA(explained_variance_ratio) 
-    transformed_images = pca.fit_transform(flatten_images.data)
+    pca = PCA(explained_variance_ratio, whiten = True) 
+    transformed_images = pca.fit_transform(flatten_images)
+    transformed_images = pca.inverse_transform(transformed_images)
 
     return transformed_images
 
