@@ -53,9 +53,17 @@ def load_data_from_file(file_path: str, run_on_notebook: bool) -> tuple[object, 
         image = cv2.imread(cell_path, cv2.IMREAD_UNCHANGED)
         cell_images.append(image)
 
-    metadata.cell_quality = metadata['cell_quality'].map(lambda value: 'bad' if value > 0 else 'good')
-
     return np.array(cell_images), metadata['cell_quality'].to_numpy(), metadata['cell_types'].to_numpy()
+
+def group_data_by_labels_and_types(data: object, labels: object, types: object, filter_by_labels, filter_by_types):
+    """
+    @author: Vo, Huynh Quang Nguyen
+    """
+    filtered_label_indexes = np.array(np.where(labels == filter_by_labels)[0])
+    filtered_types_indexes = np.array(np.where(types == filter_by_types)[0])
+    filtered_indexes = list(np.intersect1d(filtered_label_indexes, filtered_types_indexes))
+    filtered_data = data[filtered_indexes]
+    return filtered_data
 
 def preprocess_data(data: object, labels: object, types: object) -> tuple[object, object, 
     object]:
