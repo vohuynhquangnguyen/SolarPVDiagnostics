@@ -34,13 +34,15 @@ def data_augmentation() -> tuple[object, object, object, object]:
     """
     @author: Vo, Huynh Quang Nguyen
     """
-    random_flip = Sequential(layers.RandomFlip())
-    random_rotation = Sequential(layers.RandomRotation(factor = (-0.25, 0.25)))
+    random_flip = Sequential(layers.RandomFlip(mode = 'horizontal_and_vertical'))
     random_translation = \
-        Sequential(layers.RandomTranslation(height_factor = 0.02, width_factor = 0.02, fill_mode = 'nearest', interpolation = 'bilinear'))
-    random_zoom = Sequential(layers.RandomZoom(height_factor = 0.02, width_factor = 0.02))
-
-    return random_flip, random_rotation, random_translation, random_zoom
+        Sequential(layers.RandomTranslation(height_factor = (-0.05, 0.05), width_factor = (-0.05, 0.05), 
+        fill_mode = 'nearest', interpolation = 'bilinear'))
+    random_zoom = Sequential(layers.RandomZoom(height_factor = (-0.05, 0.05), width_factor = (-0.05, 0.05)))
+    random_rotation = \
+        Sequential(layers.RandomRotation(factor = (-0.255, -0.25), fill_mode = 'nearest', interpolation = 'bilinear'))
+    
+    return random_flip, random_translation, random_zoom, random_rotation
 
 def train_classification_model(model: object, model_name: str, version: str, X: object, Y: object, 
     metric_to_monitor: str, no_of_epochs: int, batch_size: int, validation_split_ratio: float) -> tuple[object, float]:
@@ -73,10 +75,14 @@ def normalize_and_augmentation(input_tensor: object) -> object:
     @author: Vo, Huynh Quang Nguyen
     """
     rescaling = layers.Rescaling(1./255)(input_tensor)
-    flipping = layers.RandomFlip()(rescaling)
-    rotating = layers.RandomRotation(factor = 0.25, fill_mode = 'nearest', interpolation = 'bilinear')(flipping)
-    zooming = layers.RandomZoom(height_factor = 0.02, width_factor = 0.02)(rotating)
-    output_tensor = layers.RandomTranslation(height_factor = 0.02, width_factor = 0.02, fill_mode = 'nearest', interpolation = 'bilinear')(zooming)
+    flipping = layers.RandomFlip(mode = 'horizontal_and_vertical')(rescaling)
+    rotating = \
+        layers.RandomRotation(factor = (-0.255, -0.25), fill_mode = 'nearest', interpolation = 'bilinear')(flipping)
+    zooming = layers.RandomZoom(height_factor = (-0.05, 0.05), width_factor = (-0.05, 0.05))(rotating)
+    translation = \
+        layers.RandomTranslation(height_factor = (-0.05, 0.05), width_factor = (-0.05, 0.05), 
+        fill_mode = 'nearest', interpolation = 'bilinear')(zooming)
+    output_tensor = translation
 
     return output_tensor
 
