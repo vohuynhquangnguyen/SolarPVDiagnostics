@@ -1,14 +1,14 @@
 import time
-from tkinter import Image
 import tensorflow as tf
 import numpy as np
-from keras import Model, layers, regularizers, optimizers
+import keras.backend as K
+from keras import Model, Sequential, layers, regularizers, optimizers
 from keras.callbacks import ModelCheckpoint
 from keras.preprocessing.image import ImageDataGenerator
 from keras.utils import plot_model
 from keras.applications import VGG19, ResNet152V2, InceptionResNetV2, EfficientNetB7
-import keras.backend as K
-
+from tensorflow.python.ops.numpy_ops import np_config
+        
 ###########
 # METHODS #
 ###########
@@ -21,7 +21,7 @@ def configure_training_policy():
     physical_devices  =  tf.config.list_physical_devices('GPU')
     if physical_devices:
         try:
-            tf.experimental.numpy.experimental_enable_numpy_behavior(prefer_float32 = True)
+            np_config.enable_numpy_behavior(prefer_float32 = True)
 
             for gpu in physical_devices:
                 tf.config.experimental.set_memory_growth(physical_devices[0], True)
@@ -29,6 +29,18 @@ def configure_training_policy():
             print(error)
 
     return None
+
+def data_augmentation() -> tuple[object, object, object, object]:
+    """
+    @author: Vo, Huynh Quang Nguyen
+    """
+    random_flip = Sequential(layers.RandomFlip())
+    random_rotation = Sequential(layers.RandomRotation(factor = (-0.25, 0.25)))
+    random_translation = \
+        Sequential(layers.RandomTranslation(height_factor = 0.02, width_factor = 0.02, fill_mode = 'nearest', interpolation = 'bilinear'))
+    random_zoom = Sequential(layers.RandomZoom(height_factor = 0.02, width_factor = 0.02))
+
+    return random_flip, random_rotation, random_translation, random_zoom
 
 def train_classification_model(model: object, model_name: str, version: str, X: object, Y: object, 
     metric_to_monitor: str, no_of_epochs: int, batch_size: int, validation_split_ratio: float) -> tuple[object, float]:
@@ -62,8 +74,7 @@ def normalize_and_augmentation(input_tensor: object) -> object:
     """
     rescaling = layers.Rescaling(1./255)(input_tensor)
     flipping = layers.RandomFlip()(rescaling)
-    rotating = layers.RandomRotation(factor = (-0.5,0.5), 
-        fill_mode = 'nearest', interpolation = 'bilinear')(flipping)
+    rotating = layers.RandomRotation(factor = 0.25, fill_mode = 'nearest', interpolation = 'bilinear')(flipping)
     zooming = layers.RandomZoom(height_factor = 0.02, width_factor = 0.02)(rotating)
     output_tensor = layers.RandomTranslation(height_factor = 0.02, width_factor = 0.02, fill_mode = 'nearest', interpolation = 'bilinear')(zooming)
 
