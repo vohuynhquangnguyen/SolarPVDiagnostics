@@ -4,6 +4,7 @@ import tensorflow as tf
 import numpy as np
 import keras.backend as K
 from keras import Model, Sequential, layers, regularizers, optimizers
+from keras.models import load_model
 from keras.callbacks import ModelCheckpoint
 from keras.preprocessing.image import ImageDataGenerator
 from keras.utils import plot_model
@@ -45,13 +46,28 @@ def data_augmentation() -> tuple[object, object, object, object]:
     
     return random_flip, random_translation, random_zoom, random_rotation
 
-def train_classification_model(model: object, model_name: str, version: str, X: object, Y: object, 
+def train_classification_model(training_phase: int, model: object, model_path: str, model_name: str, version: str, 
+    X: object, Y: object, 
     metric_to_monitor: str, no_of_epochs: int, batch_size: int, validation_split_ratio: float) -> tuple[object, float]:
     """
     @author: Vo, Huynh Quang Nguyen
     """
     
     K.clear_session()
+    
+    if (training_phase == 1):
+        model = model
+    elif (training_phase == 2):
+        model = load_model(model_path)
+        for layer in model.layers:
+            layer.trainable = True
+        model.compile(loss = 'binary_crossentropy', 
+        optimizer = optimizers.Adam(learning_rate = 1e-5, beta_1 = 0.9, beta_2 = 0.9, epsilon = 1e-8), 
+        metrics = ['accuracy', 'Precision', 'Recall'])
+    else:
+        print('Unsupported command!')
+        return None
+
     start_time = time.time()
     ###
     weight_path = f'../models/weights/{model_name}_{version}.hdf5'
@@ -65,6 +81,7 @@ def train_classification_model(model: object, model_name: str, version: str, X: 
     end_time = time.time()
 
     training_time = round(end_time - start_time, 4)
+
     return history, training_time
 
 
@@ -90,7 +107,7 @@ def normalize_and_augmentation(input_tensor: object) -> object:
 ########################
 # CLASSIFICATION MODEL #
 ########################
-def vgg19(input_shape: tuple, display_model_information: bool) -> object:
+def vgg19(input_shape: tuple, weights: str, finetune_convolution_base: bool, display_model_information: bool) -> object:
     """
     @author: Vo, Huynh Quang Nguyen
 
@@ -99,30 +116,26 @@ def vgg19(input_shape: tuple, display_model_information: bool) -> object:
     This method vgg19 creates a transfer-learning customized VGG19 binary classification model. If prompted by users, the model's information will be printed on the display.
 
     @param input_shape. Dimension of input data in the format of (height, width, channels). Minimum supported dimension is (32, 32, 3).
+    @param weights. Pretrained model weights.
+    @param finetune_convolution_base. Whether to finetune the convolution base.
     @param display_model_information. Whether to display model's information.
     """
 
     K.clear_session()
     inputs = layers.Input(shape = input_shape, name = 'inputs')
     normalized_augmented = normalize_and_augmentation(inputs)
-    vgg19 = VGG19(include_top = False, input_tensor = normalized_augmented, weights = 'imagenet')
-    vgg19.trainable = True
+    vgg19 = VGG19(include_top = False, input_tensor = normalized_augmented, weights = weights)
+    vgg19.trainable = finetune_convolution_base
     x = vgg19.output
     x = layers.GlobalAveragePooling2D(name = 'globavgpool')(x)
-    x = layers.Dense(4096, activation = 'relu', kernel_initializer = 'he_normal', 
-        name = 'dense1')(x)
-    x = layers.Dense(4096, activation = 'relu', kernel_initializer = 'he_normal',
-        name = 'dense2')(x)    
-    x = layers.Dense(1000, activation = 'relu', kernel_initializer = 'he_normal',
-        name = 'dense3')(x)    
-    x = layers.Dense(512, activation = 'relu', kernel_initializer = 'he_normal',
-         name = 'dense4')(x)    
-    outputs = layers.Dense(1, activation = 'sigmoid', kernel_initializer = 'he_normal', 
-        name = 'outputs')(x)
+    x = layers.Dense(4096, activation = 'relu', kernel_initializer = 'he_normal', name = 'dense1')(x)
+    x = layers.Dense(4096, activation = 'relu', kernel_initializer = 'he_normal', name = 'dense2')(x)       
+    x = layers.Dense(512, activation = 'relu', kernel_initializer = 'he_normal', name = 'dense3')(x)    
+    outputs = layers.Dense(1, activation = 'sigmoid', kernel_initializer = 'he_normal', name = 'outputs')(x)
     model = Model(inputs = inputs, outputs = outputs, name = 'VGG19')
     
     model.compile(loss = 'binary_crossentropy', 
-        optimizer = optimizers.Adam(learning_rate = 0.0001), 
+        optimizer = optimizers.Adam(learning_rate = 1e-5, beta_1 = 0.9, beta_2 = 0.9, epsilon = 1e-8), 
         metrics = ['accuracy', 'Precision', 'Recall'])
     
     if (display_model_information == True):
@@ -130,7 +143,8 @@ def vgg19(input_shape: tuple, display_model_information: bool) -> object:
 
     return model
 
-def resnet152v2(input_shape: tuple, display_model_information: bool) -> object:
+def resnet152v2(input_shape: tuple, weights: str, finetune_convolution_base: bool, display_model_information: bool) \
+     -> object:
     """
     @author: Vo, Huynh Quang Nguyen
 
@@ -145,20 +159,19 @@ def resnet152v2(input_shape: tuple, display_model_information: bool) -> object:
     K.clear_session()
     inputs = layers.Input(shape = input_shape)
     normalized_augmented = normalize_and_augmentation(inputs)
-    convolutional_base = ResNet152V2(include_top = False, input_tensor = normalized_augmented,
-        weights = 'imagenet')
-    convolutional_base.trainable = False
-    x = convolutional_base.get_layer('post_relu').output
+    resnet152v2 = \
+        ResNet152V2(include_top = False, input_tensor = normalized_augmented, weights = weights)
+    resnet152v2.trainable = finetune_convolution_base
+    x = resnet152v2.output
     x = layers.GlobalAveragePooling2D(name = 'globavgpool')(x)
-    x = layers.Dense(4096, activation = 'relu', name = 'dense1')(x)
-    x = layers.Dense(4096, activation = 'relu', name = 'dense2')(x)
-    x = layers.Dense(1000, activation = 'relu', name = 'dense3')(x)
-    x = layers.Dense(512, activation = 'relu', name = 'dense4')(x)    
-    outputs = layers.Dense(1, activation = 'sigmoid', name = 'output')(x)
+    x = layers.Dense(4096, activation = 'relu', kernel_initializer = 'he_normal', name = 'dense1')(x)
+    x = layers.Dense(4096, activation = 'relu', kernel_initializier = 'he_normal', name = 'dense2')(x)
+    x = layers.Dense(2048, activation = 'relu', kernel_initializer = 'he_normal', name = 'dense3')(x)
+    outputs = layers.Dense(1, activation = 'sigmoid', kernel_initializer = 'he_normal', name = 'outputs')(x)
     model = Model(inputs = inputs, outputs = outputs, name = 'ResNet152v2')
     
     model.compile(loss = 'binary_crossentropy', 
-        optimizer = optimizers.Adam(learning_rate = 0.0001), 
+        optimizer = optimizers.Adam(learning_rate = 1e-3, beta_1 = 0.9, beta_2 = 0.9, epsilon = 1e-8), 
         metrics = ['accuracy', 'Precision', 'Recall'])
 
     if (display_model_information == True):
