@@ -1,3 +1,4 @@
+from random import shuffle
 import time
 import tensorflow as tf
 import numpy as np
@@ -58,7 +59,7 @@ def train_classification_model(model: object, model_name: str, version: str, X: 
         verbose = 1, save_best_only = True, mode = 'max')
     callbacks_list = [checkpoint]
     history = model.fit(X, Y, validation_split = validation_split_ratio, epochs = no_of_epochs, 
-        batch_size = batch_size, callbacks = callbacks_list, verbose = 1)
+        batch_size = batch_size, callbacks = callbacks_list, verbose = 1, shuffle = True)
     np.save(f'../models/history/{model_name}_{version}', history.history)
     ###
     end_time = time.time()
@@ -104,9 +105,9 @@ def vgg19(input_shape: tuple, display_model_information: bool) -> object:
     K.clear_session()
     inputs = layers.Input(shape = input_shape, name = 'inputs')
     normalized_augmented = normalize_and_augmentation(inputs)
-    vggmodel = VGG19(include_top = False, input_tensor = normalized_augmented, weights = 'imagenet')
-    vggmodel.trainable = False
-    x = vggmodel.output
+    vgg19 = VGG19(include_top = False, input_tensor = normalized_augmented, weights = 'imagenet')
+    vgg19.trainable = True
+    x = vgg19.output
     x = layers.GlobalAveragePooling2D(name = 'globavgpool')(x)
     x = layers.Dense(4096, activation = 'relu', kernel_initializer = 'he_normal', 
         name = 'dense1')(x)
@@ -147,7 +148,7 @@ def resnet152v2(input_shape: tuple, display_model_information: bool) -> object:
     convolutional_base = ResNet152V2(include_top = False, input_tensor = normalized_augmented,
         weights = 'imagenet')
     convolutional_base.trainable = False
-    x = convolutional_base.get_layer(-1).output
+    x = convolutional_base.get_layer('post_relu').output
     x = layers.GlobalAveragePooling2D(name = 'globavgpool')(x)
     x = layers.Dense(4096, activation = 'relu', name = 'dense1')(x)
     x = layers.Dense(4096, activation = 'relu', name = 'dense2')(x)
