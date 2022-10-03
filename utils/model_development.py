@@ -229,10 +229,12 @@ def resnet152v2(input_shape: tuple, weights: str, freeze_convolutional_base: boo
     x = layers.GlobalAveragePooling2D(name = 'globavgpool')(x)
     x = layers.Dense(4096, 
         activation = 'relu', kernel_initializer = 'he_normal', name = 'dense1')(x)
+    x = layers.Dropout(0.2)(x)
     x = layers.Dense(4096, 
-        activation = 'relu', kernel_initializier = 'he_normal', name = 'dense2')(x)
+        activation = 'relu', kernel_initializer = 'he_normal', name = 'dense2')(x)
+    x = layers.Dropout(0.2)(x)       
     x = layers.Dense(2048, 
-        activation = 'relu', kernel_initializer = 'he_normal', name = 'dense3')(x)
+        activation = 'relu', kernel_initializer = 'he_normal', name = 'dense3')(x)    
     outputs = layers.Dense(1, 
         activation = 'sigmoid', kernel_initializer = 'he_normal', name = 'outputs')(x)
     model = Model(inputs = inputs, outputs = outputs, name = 'ResNet152v2')
