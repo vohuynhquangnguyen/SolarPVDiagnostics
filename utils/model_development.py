@@ -64,7 +64,10 @@ def data_augmentation() -> tuple[object, object, object, object]:
     return random_flip, random_translation, random_zoom, random_rotation
 
 def create_optimizer(type: str) -> object:
-    if type == 'adam':
+    if type == 'nadam':
+        optimizer = \
+            optimizers.Nadam(learning_rate = 1e-3, beta_1 = 0.9, beta_2 = 0.9, epsilon = 1e-8)
+    elif type == 'adam':
         optimizer = \
             optimizers.Adam(learning_rate = 1e-5, beta_1 = 0.9, beta_2 = 0.9, epsilon = 1e-8)
     else:
@@ -183,8 +186,10 @@ def vgg19(input_shape: tuple, weights: str, freeze_convolutional_base: bool,
     x = layers.GlobalAveragePooling2D(name = 'globavgpool')(x)
     x = layers.Dense(4096, 
         activation = 'relu', kernel_initializer = 'he_normal', name = 'dense1')(x)
+    x = layers.Dropout(0.2)(x)
     x = layers.Dense(4096, 
-        activation = 'relu', kernel_initializer = 'he_normal', name = 'dense2')(x)       
+        activation = 'relu', kernel_initializer = 'he_normal', name = 'dense2')(x)
+    x = layers.Dropout(0.2)(x)       
     x = layers.Dense(512, 
         activation = 'relu', kernel_initializer = 'he_normal', name = 'dense3')(x)    
     outputs = layers.Dense(1, 
@@ -290,7 +295,9 @@ def efficientnetB7(input_shape: tuple, display_model_information: bool) -> objec
     x = convolutional_base.get_layer(-1).output
     x = layers.GlobalAveragePooling2D(name = 'globavgpool')(x)
     x = layers.Dense(4096, activation = 'relu', name = 'dense1')(x)
+    x = layers.Dropout(0.2)(x)
     x = layers.Dense(4096, activation = 'relu', name = 'dense2')(x)
+    x = layers.Dropout(0.2)(x)
     x = layers.Dense(1000, activation = 'relu', name = 'dense3')(x)
     x = layers.Dense(512, activation = 'relu', name = 'dense4')(x)    
     outputs = layers.Dense(1, activation = 'sigmoid', name = 'output')(x)
