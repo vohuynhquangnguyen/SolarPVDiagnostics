@@ -6,7 +6,7 @@ import keras.backend as K
 from keras import Model, Sequential, layers, regularizers, optimizers
 from keras.models import load_model
 from keras.callbacks import ModelCheckpoint
-from keras.applications import VGG19, ResNet152V2, InceptionResNetV2, EfficientNetB7
+from keras.applications import VGG19, ResNet152V2, InceptionResNetV2, NASNetLarge
 from tensorflow.python.ops.numpy_ops import np_config
         
 ###########
