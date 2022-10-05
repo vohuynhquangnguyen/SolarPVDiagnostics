@@ -186,10 +186,10 @@ def vgg19(input_shape: tuple, weights: str, freeze_convolutional_base: bool,
     x = layers.GlobalAveragePooling2D(name = 'globavgpool')(x)
     x = layers.Dense(4096, 
         activation = 'relu', kernel_initializer = 'he_normal', name = 'dense1')(x)
-    x = layers.Dropout(0.2)(x)
+    x = layers.Dropout(0.2, name = 'dropout1')(x)
     x = layers.Dense(4096, 
         activation = 'relu', kernel_initializer = 'he_normal', name = 'dense2')(x)
-    x = layers.Dropout(0.2)(x)       
+    x = layers.Dropout(0.2, name = 'dropout2')(x)       
     x = layers.Dense(512, 
         activation = 'relu', kernel_initializer = 'he_normal', name = 'dense3')(x)    
     outputs = layers.Dense(1, 
@@ -229,11 +229,11 @@ def resnet152v2(input_shape: tuple, weights: str, freeze_convolutional_base: boo
     x = layers.GlobalAveragePooling2D(name = 'globavgpool')(x)
     x = layers.Dense(4096, 
         activation = 'relu', kernel_initializer = 'he_normal', name = 'dense1')(x)
-    x = layers.Dropout(0.2)(x)
+    x = layers.Dropout(0.2, name = 'dropout1')(x)
     x = layers.Dense(4096, 
         activation = 'relu', kernel_initializer = 'he_normal', name = 'dense2')(x)
-    x = layers.Dropout(0.2)(x)       
-    x = layers.Dense(2048, 
+    x = layers.Dropout(0.2, name = 'dropout2')(x)       
+    x = layers.Dense(512, 
         activation = 'relu', kernel_initializer = 'he_normal', name = 'dense3')(x)    
     outputs = layers.Dense(1, 
         activation = 'sigmoid', kernel_initializer = 'he_normal', name = 'outputs')(x)
@@ -244,7 +244,8 @@ def resnet152v2(input_shape: tuple, weights: str, freeze_convolutional_base: boo
 
     return model
 
-def inception_resnetv2(input_shape: tuple, display_model_information: bool) -> object:
+def inception_resnetv2(input_shape: tuple, weights: str, freeze_convolutional_base: bool,
+    display_model_information: bool) -> object:
     """
     @author: Vo, Huynh Quang Nguyen
 
@@ -252,24 +253,34 @@ def inception_resnetv2(input_shape: tuple, display_model_information: bool) -> o
 
     This method inception_resnetv2 creates a transfer-learning customized InceptionResNetv2 binary classification model. If prompted by users, the model's information will be printed on the display.
 
-    @param input_shape. Dimension of input data in the format of (height, width, channels). Minimum supported dimension is (75, 75, 3).
-    @param display_model_information. Whether to display model's information.
-
+    @param `input_shape`. Dimension of input data in the format of `(height, width, channels)`. Minimum supported dimension is `(75, 75, 3)`.
+    @param `weights`. Pretrained model weights.
+    @param `freeze_convolutional_base`. Whether to freeze the convolution base.
+    @param `display_model_information`. Whether to display model's information.
     """
     
     K.clear_session()
     inputs = layers.Input(shape = input_shape)
     normalized_augmented = normalize_and_augmentation(inputs)
-    convolutional_base = InceptionResNetV2(include_top = False, 
-        input_tensor = normalized_augmented, weights = 'imagenet')
-    convolutional_base.trainable = False
-    x = convolutional_base.get_layer(-1).output
+    inception_resnetv2 = InceptionResNetV2(include_top = False, 
+        input_tensor = normalized_augmented, weights = weights)
+    if freeze_convolutional_base == True:
+        inception_resnetv2.trainable = False
+    else:
+        inception_resnetv2.trainable = True
+    x = inception_resnetv2.output
+    x = inception_resnetv2.output
     x = layers.GlobalAveragePooling2D(name = 'globavgpool')(x)
-    x = layers.Dense(4096, activation = 'relu', name = 'dense1')(x)
-    x = layers.Dense(4096, activation = 'relu', name = 'dense2')(x)
-    x = layers.Dense(1000, activation = 'relu', name = 'dense3')(x)
-    x = layers.Dense(512, activation = 'relu', name = 'dense4')(x)    
-    outputs = layers.Dense(1, activation = 'sigmoid', name = 'output')(x)
+    x = layers.Dense(4096, 
+        activation = 'relu', kernel_initializer = 'he_normal', name = 'dense1')(x)
+    x = layers.Dropout(0.2, name = 'dropout1')(x)
+    x = layers.Dense(4096, 
+        activation = 'relu', kernel_initializer = 'he_normal', name = 'dense2')(x)
+    x = layers.Dropout(0.2, name = 'dropout2')(x)       
+    x = layers.Dense(512, 
+        activation = 'relu', kernel_initializer = 'he_normal', name = 'dense3')(x)    
+    outputs = layers.Dense(1, 
+        activation = 'sigmoid', kernel_initializer = 'he_normal', name = 'outputs')(x)
     model = Model(inputs = inputs, outputs = outputs, name = 'InceptionResNetv2')
     
     if (display_model_information == True):
@@ -277,32 +288,43 @@ def inception_resnetv2(input_shape: tuple, display_model_information: bool) -> o
 
     return model
 
-def efficientnetB7(input_shape: tuple, display_model_information: bool) -> object:
+def nasnetlarge(input_shape: tuple, weights: str, freeze_convolutional_base: bool,
+    display_model_information: bool) -> object:
     """
     @author: Vo, Huynh Quang Nguyen
 
-    Create a customized EfficientNetB7 binary classification model.
+    Create a customized NASNetLarge binary classification model.
 
-    This method efficientnetB7 creates a transfer-learning customized EfficientNetB7 binary classification model. If prompted by users, the model's information will be printed on the display.
+    This method efficientnetB7 creates a transfer-learning customized NASNetLarge binary classification model. If prompted by users, the model's information will be printed on the display.
 
-    @param input_shape. Dimension of input data in the format of (height, width, channels). Minimum supported dimension is (64, 64, 3).
-    @param display_model_information. Whether to display model's information.
+    @param `input_shape`. Dimension of input data in the format of `(height, width, channels)`. Minimum supported dimension is `(32, 32, 3)`.
+    @param `weights`. Pretrained model weights.
+    @param `freeze_convolutional_base`. Whether to freeze the convolution base.
+    @param `display_model_information`. Whether to display model's information.
     """
     
     K.clear_session()
 
     inputs = layers.Input(shape = input_shape)
-    convolutional_base = EfficientNetB7(include_top = False, input_tensor = inputs, weights = 'imagenet')
-    convolutional_base.trainable = True
-    x = convolutional_base.get_layer(-1).output
+    normalized_augmented = normalize_and_augmentation(inputs)
+    nasnetlarge = NASNetLarge(include_top = False, 
+        input_tensor = normalized_augmented, weights = weights)
+    if freeze_convolutional_base == True:
+        nasnetlarge.trainable = False
+    else:
+        nasnetlarge.trainable = True
+    x = nasnetlarge.output
     x = layers.GlobalAveragePooling2D(name = 'globavgpool')(x)
-    x = layers.Dense(4096, activation = 'relu', name = 'dense1')(x)
-    x = layers.Dropout(0.2)(x)
-    x = layers.Dense(4096, activation = 'relu', name = 'dense2')(x)
-    x = layers.Dropout(0.2)(x)
-    x = layers.Dense(1000, activation = 'relu', name = 'dense3')(x)
-    x = layers.Dense(512, activation = 'relu', name = 'dense4')(x)    
-    outputs = layers.Dense(1, activation = 'sigmoid', name = 'output')(x)
+    x = layers.Dense(4096, 
+        activation = 'relu', kernel_initializer = 'he_normal', name = 'dense1')(x)
+    x = layers.Dropout(0.2, name = 'dropout1')(x)
+    x = layers.Dense(4096, 
+        activation = 'relu', kernel_initializer = 'he_normal', name = 'dense2')(x)
+    x = layers.Dropout(0.2, name = 'dropout2')(x)       
+    x = layers.Dense(512, 
+        activation = 'relu', kernel_initializer = 'he_normal', name = 'dense3')(x)    
+    outputs = layers.Dense(1, 
+        activation = 'sigmoid', kernel_initializer = 'he_normal', name = 'outputs')(x)
     model = Model(inputs = inputs, outputs = outputs)
     
     if (display_model_information == True):
