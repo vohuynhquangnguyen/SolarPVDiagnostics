@@ -1,49 +1,69 @@
 import numpy as np
 import scipy as sp
-import matplotlib.pyplot as plt
-import keras.backend as K
 from keras import models
-from sklearn.model_selection import train_test_split
+import keras.backend as K
 from sklearn.metrics import roc_curve, auc, confusion_matrix
 
 ###########
 # METHODS #
 ###########
-def visualize_training_history(history_path: str, metric: str):
-    history = np.load(history_path, allow_pickle = True).item()
 
-    if (metric == 'accuracy'):
-        fig, axs = plt.subplots(figsize = (10,5))
-        axs.plot(history['accuracy'], color = 'tab:blue', label = 'accuracy')
-        axs.plot(history['val_accuracy'], color = 'tab:orange', label = 'val_accuracy')
-        axs.legend(loc = 'upper left', frameon = True)
-        axs.set_xlabel('epoch')
-        axs.set_ylabel('accuracy [a.u.]')
-        axs.set_title('Model Accuracy')
-        axs.grid(True)
-        plt.show()
+def compute_AUC(target_model: object, X_test: object, Y_test: object):
+    """
+    @author: Vo, Huynh Quang Nguyen
+    """
 
-    elif (metric == 'precision'):
-        fig, axs = plt.subplots(figsize = (10,5))
-        axs.plot(history['precision'], color = 'tab:blue', label = 'precision')
-        axs.plot(history['val_precision'], color = 'tab:orange', label = 'val_precision')
-        axs.legend(loc = 'upper left', frameon = True)
-        axs.grid(True)
-        axs.set_xlabel('epoch')
-        axs.set_ylabel('precision [a.u.]')
-        axs.set_title('Model Precision')
-        plt.show()
+    K.clear_session()
+    model = models.load_model(target_model)
 
-    elif (metric == 'recall'):
-        fig, axs = plt.subplots(figsize = (10,5))
-        axs.plot(history['recall'], color = 'tab:blue', label = 'recall')
-        axs.plot(history['val_recall'], color = 'tab:orange', label = 'val_recall')
-        axs.legend(loc = 'upper left', frameon = True)
-        axs.grid(True)
-        axs.set_xlabel('epoch')
-        axs.set_ylabel('recall [a.u.]')
-        axs.set_title('Model Recall')
-        plt.show()
+    Y_pred = model.predict(X_test).ravel()
+    model_fpr, model_tpr, _ = roc_curve(Y_test, Y_pred)
+    model_auc = auc(model_fpr, model_tpr) 
 
-    return None
+    return model_auc, model_fpr, model_tpr
 
+def compute_confusion_matrix(target_model: object, X_test: object, Y_test: object,
+    defective_probability: float):
+    """
+    @author: Vo, Huynh Quang Nguyen
+    """
+    
+    K.clear_session()
+    model = models.load_model(target_model)
+
+    Y_pred = model.predict(X_test).ravel()
+    Y_pred = np.where(Y_pred > defective_probability)
+    model_confusion_matrix = confusion_matrix(Y_test, Y_pred , normalize='pred')
+    
+    return model_confusion_matrix
+
+########################
+# CLASSIFICATION MODEL #
+########################
+
+def compute_CAM(target_model: object, final_convolution_layer: str, 
+    X_test: object):
+    """
+    @author: Vo, Huynh Quang Nguyen
+    """
+    
+    K.clear_session()
+
+    model = models.load_model(target_model)
+    cam_model = models.Model(inputs = model.input, outputs = \
+            (model.get_layer(final_convolution_layer).output, model.get_layer('output').output))
+    features, results = cam_model.predict(X_test)
+    gap_weights = model.get_layer('output').get_weights()[0]
+
+    cams = []
+    
+    for idx in range(X_test.shape[0]):
+        image_features = features[idx, :, :, :]
+        prediction = np.argmax(results[idx])
+        cam_weights = gap_weights[:, prediction]
+        cam_features = \
+            sp.ndimage.zoom(image_features, (X_test.shape[1] / features.shape[1], X_test.shape[1] / features.shape[2], 1), order = 5)
+        cam_output = np.dot(cam_features, cam_weights)
+        cams.append(cam_output)
+
+    return np.array(cams
