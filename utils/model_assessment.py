@@ -66,4 +66,4 @@ def compute_CAM(target_model: object, final_convolution_layer: str,
         cam_output = np.dot(cam_features, cam_weights)
         cams.append(cam_output)
 
-    return np.array(cams
+    return np.array(cams)
