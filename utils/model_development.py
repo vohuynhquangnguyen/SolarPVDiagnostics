@@ -88,6 +88,15 @@ def create_optimizer(type: str) -> object:
         pass
     return optimizer
 
+@tf.function
+def ssim_loss(target, reference):
+    """
+    @author: Vo, Huynh Quang Nguyen
+    """
+    score = 1 - tf.reduce_mean(tf.image.ssim(target, reference, max_val = 1.0))
+
+    return score
+
 def train_classification_model(training_phase: int, model: object, 
     optimizer: object, training_metrics: list, model_name: str, version: str, 
     X: object, Y: object, metric_to_monitor: str, no_of_epochs: int, batch_size: int, validation_split_ratio: float) -> tuple[object, float]:
@@ -141,6 +150,58 @@ def train_classification_model(training_phase: int, model: object,
 
     return history, training_time
 
+def train_reconstruction_model(training_phase: int, model: object, 
+    optimizer: object, training_metrics: list, model_name: str, version: str, 
+    X: object, Y: object, metric_to_monitor: str, no_of_epochs: int, batch_size: int, validation_split_ratio: float) -> tuple[object, float]:
+    """
+    @author: Vo, Huynh Quang Nguyen
+
+    Train reconstruction models.
+
+    This function `train_reconstruction_model` initializes a training session for a simple reconstruction model (e.g., convolutional autoencoder or uNet). 
+
+    @param `training_phase`. Designated phase of this training session. If the `training_phase = 1`, only the model's decoding layers are trained. If the `training_phase = 2`, all model's layers are trained.
+    @param `model`. Loaded model. If the `training_phase = 1`, the loaded model is a newly created model. If the `training_phase = 2`, the loaded model is a saved model at a specific location (e.g., `./models/weights/model.hdf5`).
+    @param `optimizer`. Optimization function for model training.
+    @param `training_metrics`. List of metrics for model training. For reconstruction tasks, the metrics are usually `val_loss`.
+    @params `model_name`, `version`. Name of the model and its version.
+    @params `X`, `Y`. Training data and labels.
+    @param `metric_to_monitor`. Which metric to monitor to acquire the best model.
+    @params `no_of_epochs`, `batch_size`. Total number of epochs and batch size for this training session/
+    @param `validation_split_ratio`: Split ratio to divide the training set into training and validation subsets.
+    @return `history`. A dictionary containing model's training history including training accuracy, validation accuracy, etc. as function of epochs.
+    @return `training_time`. Total elapsed training time.
+    """
+    
+    K.clear_session()
+    assert(training_phase == 1 or training_phase == 2), print('Unsupported command!')
+    try:
+        if (training_phase == 1):
+            model = model
+        elif (training_phase == 2):
+            model = load_model(model)
+            for layer in model.layers:
+                layer.trainable = True    
+
+        start_time = time.time()
+        ###
+        model.compile(\
+                loss = training_metrics, optimizer = optimizer)
+        weight_path = f'../models/weights/{model_name}_{version}.hdf5'
+        checkpoint = ModelCheckpoint(weight_path, monitor = metric_to_monitor, 
+            verbose = 1, save_best_only = True, mode = 'max')
+        callbacks_list = [checkpoint]
+        history = model.fit(X, Y, validation_split = validation_split_ratio, epochs = no_of_epochs, 
+            batch_size = batch_size, callbacks = callbacks_list, verbose = 1)
+        np.save(f'../models/history/{model_name}_{version}', history.history)
+        ###
+        end_time = time.time()
+
+        training_time = round(end_time - start_time, 4)
+    except RuntimeError as error:
+        print(error)
+
+    return history, training_time
 
 #####################
 # SUPPORTING LAYERS #
@@ -348,3 +409,39 @@ def nasnetlarge(input_shape: tuple, weights: str, freeze_convolutional_base: boo
 ########################
 # RECONSTRUCTION MODEL #
 ########################
+def cae_VGG19(input_shape: tuple, weights: str, freeze_convolutional_base: bool,
+    display_model_information: bool):
+    """
+    @author: Vo, Huynh Quang Nguyen
+    """
+    K.clear_session()
+
+    inputs = layers.Input(shape = input_shape)
+    normalized_augmented = normalize_and_augmentation(inputs)
+    resized = layers.Resizing(height = 512, width = 512, interpolation = 'lanczos5')(normalized_augmented)
+    vgg19 = VGG19(include_top = False, input_tensor = resized, weights = weights)
+
+    if freeze_convolutional_base == True:
+        vgg19.trainable = False
+    else:
+        vgg19.trainable = True
+    x = vgg19.output
+    x = layers.Conv2DTranspose(filters = 512, kernel_size = (3, 3), strides = 2, 
+        activation = 'relu', padding = 'same', kernel_initializer = 'he_normal')(x)
+    x = layers.Conv2DTranspose(filters = 512, kernel_size = (3, 3), strides = 2, 
+        activation = 'relu', padding = 'same', kernel_initializer = 'he_normal')(x)
+    x = layers.Conv2DTranspose(filters = 256, kernel_size = (3, 3), strides = 2, 
+        activation = 'relu', padding = 'same', kernel_initializer = 'he_normal')(x)
+    x = layers.Conv2DTranspose(filters = 128, kernel_size = (3, 3), strides = 2, 
+        activation = 'elu', padding = 'same', kernel_initializer = 'he_normal')(x)
+    x = layers.Conv2DTranspose(filters = 64, kernel_size = (3, 3), strides = 2, 
+        activation = 'elu', padding = 'same', kernel_initializer = 'he_normal')(x)
+    x = layers.Conv2D(filters = input_shape[2], kernel_size = (3, 3), activation = None, 
+        padding = 'same', kernel_initializer = 'he_normal')(x)
+    outputs = layers.Rescaling(255.0 / 1)(x)
+    model = Model(inputs = inputs, outputs = outputs)
+     
+    if display_model_information == True:
+        model.summary()
+
+    return model
