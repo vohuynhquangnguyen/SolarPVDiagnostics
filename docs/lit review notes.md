@@ -2,6 +2,7 @@
     • Extracting CV-related features (mean pixel value, etc), statistical features (means, medians, sd) from areas of interest   
     • Extract “textual” features (texture of the region of interest) to measure properties such as smoothness, coarseness, and regularity. Described in three principal approaches: statistical (calculated by GLCM matrix), structural and spectral.  
     • In order to select features best describe and classify the data into two desired class, a Bayes classifier is trained, and Leave-one-out resampling is used. Bayesian is train with density function p(x|wi) and prior P(wi).  
+2. 
 3. Automatic classification of defective photovoltaic module cells in electroluminescence images
     • Propose two pipeline for determining a per-cell defect likelihood:  
         ◦ SVM – trained with various features extracted from images (less computation complexity)  
@@ -24,3 +25,17 @@
     • The combination of two image augmentation method improves the classification accuracy significantly  
     • The proposed CNN-based model provides the best trade-off between accuracy and computational complexity.  
     • Noted that the model is created with optimal depth (increasing the depth decrease the accuracy) with optimal number of convolution kernel as well as inclusion of pooling layers that is able to reduce the computation complexity  
+
+5. Solar Cell Surface Defect Inspection Based on Multispectral Convolutional Neural Network
+    • Construct a multi-spectral CNN model to enhance the discrimination ability, in order to distinguish between complex texture background features and defect features. Accuracy of defect recognition reaches 94.3%.
+    • The first paper to inspect solar cell defect using deep learning.
+    • Methods:
+    	• Multispectral defect feature analysis.
+    	• CNN model design: Based on Alexnet model, adjusting the convolutional kernel size and network depth to increase the model's ability to defect discrimination. The deeper the model is, the better the features it can extract. The larger the kernel is, the more surrounding information it can extract from the features.
+    	• Multi-spectral CNN model design: The 3 spectra are split are sent to 3 different networks, and their output characteristics are connected and put into a fully connected layer. The multi-spectral model can extract mixed features of multiple spectra, giving distinct features of each defect in the different spectra, so the outputs are easier to inspect defect.
+    • Experiments:
+   	• Select CNN depth, kernel size and stride step: Depending on the defect datasets, 3 different models with different depths and kernel sizes are designed and then select the best one. Evaluate using Precision, Recall and F-measure. The best structure gave 87.3% precision, 97.04% recall and 0.9187 F-measure. The step size is then selected as 469x469.
+   	• Compare between multi-spectral model and normal model: Use K-fold cross validaton (K=5) to increase credibility of training results. 
+   		• Result: Multi-spectral CNN model has higher detection rates of cell defects. Some defects results are about 1% higher. Different train-test ratio are also conducted, and the model is still effective with different split. Higher train-test ratio means better precision, recall and F-measure.
+   	• Compare in multi-class classification: Multi-spectral CNN model has 2-6% higher accuracy compared to normal CNN model. The result of multi-class classification is 8% lower than binary classification.
+   	• Compare with other ML methods: Compare with LBP+HOP-SVM and Gabor-SVM. MS-CNN has best results: 88.41% precision, 98.4% recall and 0.94 F-measure compared to other methods. Training and detection time is also experiments, and MS-CNN gave much better detection time than the other 2 methods, but with higher training time.
