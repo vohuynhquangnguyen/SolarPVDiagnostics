@@ -37,7 +37,7 @@
    	• Select CNN depth, kernel size and stride step: Depending on the defect datasets, 3 different models with different depths and kernel sizes are designed and then select the best one. Evaluate using Precision, Recall and F-measure. The best structure gave 87.3% precision, 97.04% recall and 0.9187 F-measure. The step size is then selected as 469x469.
    	• Compare between multi-spectral model and normal model: Use K-fold cross validaton (K=5) to increase credibility of training results. 
    		• Result: Multi-spectral CNN model has higher detection rates of cell defects. Some defects results are about 1% higher. Different train-test ratio are also conducted, and the model is still effective with different split. Higher train-test ratio means better precision, recall and F-measure.
-   	• Compare in multi-class classfication: Multi-spectral CNN model has 2-6% higher accuracy compared to normal CNN model. The result of multi-class classification is 8% lower than binary classification.
+   	• Compare in multi-class classification: Multi-spectral CNN model has 2-6% higher accuracy compared to normal CNN model. The result of multi-class classification is 8% lower than binary classification.
    	• Compare with other ML methods: Compare with LBP+HOP-SVM and Gabor-SVM. MS-CNN has best results: 88.41% precision, 98.4% recall and 0.94 F-measure compared to other methods. Training and detection time is also experiments, and MS-CNN gave much better detection time than the other 2 methods, but with higher training time.
 
 6.
@@ -51,10 +51,37 @@
     • Dataset: Split train-test by 90-10 ratio, highly imbalance as only 3.4% are defect.
     • Experiments:
     	• Oversampling and no data augmentation: Minority class is enlarged, good-defect ratio is 2:1.
-    	• No versampling and data augmentation: Diversity is enlarged, but still imbalanced.
+    	• No oversampling and data augmentation: Diversity is enlarged, but still imbalanced.
     	• Oversampling and data augmentation: A more balanced and diverse dataset.
     • Results:
-	• With only minor oversampling and data augmentation: FNR is high (50.26% and 38.89%).
-	• Only oversampling: Performed well on training set with low BER, but poorly on validation set -> overfitted.	
-	• Only data augmentation: Reduced FPR and FNR, but High BER (19.57%).
-	• Combine both: Overfitting is reduced, low BER (7.73%), low FNR (12.96%), tolerable slightly increase in FPR.
+    	• With only minor oversampling and data augmentation: FNR is high (50.26% and 38.89%).
+    	• Only oversampling: Performed well on training set with low BER, but poorly on validation set -> overfitted.	
+    	• Only data augmentation: Reduced FPR and FNR, but High BER (19.57%).
+    	• Combine both: Overfitting is reduced, low BER (7.73%), low FNR (12.96%), tolerable slightly increase in FPR.
+
+8.
+
+9. Unsupervised Anomaly Detection for X-Ray Images
+    • Use unsupervised methods to detect anomalies to evaluate X-ray images of hands. 
+    • Propose a powerful preprocessing pipeline to reduce the effect of noise. 
+    • Evaluate on multiple approaches and can also achieve satisfying results without labels.
+    • Preprocessing: Cropping using Otsu Binarization -> Hand Localization by manually labelling bounding boxes and then fine-tuning a SSD with MobileNet -> Segmentation using Photoshop to achieve pixel-wise mask -> Image resizing (for GAN-based models) -> Data augmentation (horizontal/vertical flipping, channel-wise multiplication, rotation, scaling) -> Pad images to 512x512 (AE + DCGAN) or 128x128 (BiGAN + αGAN) pixels.
+    • Models:
+    	• AEs: Using a variant of reconstruction loss - masked reconstruction loss. 
+    		• CAE: Fully CNNs, with Batch Norm and ReLU activation, spatial resolution 16x16, 512 channels.
+    		• VAE: Additional loss term introduced as KLD between N (µ(x), Σ(x)) and N (0, I).
+    		• Usage: Pixel-wise heatmap, expecting anomalies with high errors in highlighting regions hardest to reconstruct, obtain an image-wise score towards anomalous regions.
+    	• GANs:	
+    		• DCGAN: Fully connected CNNs.
+    		• BiGAN/ALIGAN: Extends DCGAN with an extra encoder to encode real images to latent space.
+    		• α-GAN: 4 sub-networks: Encoder, Code-discriminator, Generator, Decoder.
+    		• Output of discriminator as anomaly score (mean over code discriminator and discriminator probability for α-GAN).
+    • Experiments: 
+    	• Single channel images, trained on images without anomaly, images split by patient.
+    	• Train models from scratch without transfer learning, perform manual hyperparameter search on validation set to choose best performers per type w/r/t ROC-AUC.
+    • Results:
+    	• All models have best runs when data is fully preprocessed.
+    	• Histogram equalization improves results of AE-based models consistently.
+    	• Top-k (k = 200) loss values across all pixels does not improve the result.
+    	• Best ROC-AUC score with 60.7% for α-GAN using the discriminator probability, and 57% for CAE with pixel-level anomaly scores for better intepretability.
+    	• All methods with reconstruction loss were able to generate heatmaps of anomalous regions that non-experts can interpret.
