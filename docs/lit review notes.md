@@ -37,5 +37,24 @@
    	• Select CNN depth, kernel size and stride step: Depending on the defect datasets, 3 different models with different depths and kernel sizes are designed and then select the best one. Evaluate using Precision, Recall and F-measure. The best structure gave 87.3% precision, 97.04% recall and 0.9187 F-measure. The step size is then selected as 469x469.
    	• Compare between multi-spectral model and normal model: Use K-fold cross validaton (K=5) to increase credibility of training results. 
    		• Result: Multi-spectral CNN model has higher detection rates of cell defects. Some defects results are about 1% higher. Different train-test ratio are also conducted, and the model is still effective with different split. Higher train-test ratio means better precision, recall and F-measure.
-   	• Compare in multi-class classification: Multi-spectral CNN model has 2-6% higher accuracy compared to normal CNN model. The result of multi-class classification is 8% lower than binary classification.
+   	• Compare in multi-class classfication: Multi-spectral CNN model has 2-6% higher accuracy compared to normal CNN model. The result of multi-class classification is 8% lower than binary classification.
    	• Compare with other ML methods: Compare with LBP+HOP-SVM and Gabor-SVM. MS-CNN has best results: 88.41% precision, 98.4% recall and 0.94 F-measure compared to other methods. Training and detection time is also experiments, and MS-CNN gave much better detection time than the other 2 methods, but with higher training time.
+
+6.
+
+7. Automated Detection of Solar Cell Defects with Deep Learning
+    • Propose a deep CNN for EL cell image classification. Present a signal processing pipeline for image preprocessing and classification and different methods to handle dataset imbalance.
+    • Methods:
+    	• Pipeline: Correct the image distortions -> Segmentation -> Perspective correction (RANSAC) -> Cells are extracted and classified by CNN.	
+    	• CNN architecture: VGG16 adaptation, with reduced number of filters and fully connected layer size, changed output layer, extra batch norm, ELU activation, L2-norm.
+    • Dealing with dataset imbalance: a non-heuristic resampling method. Data augmentation is also used to reduce overfitting (random horizontal/vertical image flipping). An extra augmentation step is done to deal with rotation, translation and shearing.
+    • Dataset: Split train-test by 90-10 ratio, highly imbalance as only 3.4% are defect.
+    • Experiments:
+    	• Oversampling and no data augmentation: Minority class is enlarged, good-defect ratio is 2:1.
+    	• No versampling and data augmentation: Diversity is enlarged, but still imbalanced.
+    	• Oversampling and data augmentation: A more balanced and diverse dataset.
+    • Results:
+	• With only minor oversampling and data augmentation: FNR is high (50.26% and 38.89%).
+	• Only oversampling: Performed well on training set with low BER, but poorly on validation set -> overfitted.	
+	• Only data augmentation: Reduced FPR and FNR, but High BER (19.57%).
+	• Combine both: Overfitting is reduced, low BER (7.73%), low FNR (12.96%), tolerable slightly increase in FPR.
