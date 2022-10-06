@@ -93,6 +93,8 @@ def ssim_loss(target, reference):
     """
     @author: Vo, Huynh Quang Nguyen
     """
+    target = tf.cast(target, tf.float32)
+    reference = tf.cast(reference, tf.float32)
     score = 1 - tf.reduce_mean(tf.image.ssim(target, reference, max_val = 1.0))
 
     return score
@@ -437,8 +439,9 @@ def cae_VGG19(input_shape: tuple, weights: str, freeze_convolutional_base: bool,
     x = layers.Conv2DTranspose(filters = 64, kernel_size = (3, 3), strides = 2, 
         activation = 'elu', padding = 'same', kernel_initializer = 'he_normal')(x)
     x = layers.Conv2D(filters = input_shape[2], kernel_size = (3, 3), activation = None, 
-        padding = 'same', kernel_initializer = 'he_normal')(x)
-    outputs = layers.Rescaling(255.0 / 1)(x)
+        padding = 'same', kernel_initializer = 'he_normal')(x)    
+    x = layers.Rescaling(255.0 / 1)(x)
+    outputs = layers.Resizing(height = 300, width = 300, interpolation = 'lanczos5')(x)
     model = Model(inputs = inputs, outputs = outputs)
      
     if display_model_information == True:
