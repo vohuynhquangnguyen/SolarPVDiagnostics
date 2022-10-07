@@ -7,6 +7,13 @@ from sklearn.metrics import roc_curve, auc, confusion_matrix
 ###########
 # METHODS #
 ###########
+def compute_F1_score(precision: float, recall: float):
+    """
+    @author: Vo, Huynh Quang Nguyen
+    """
+    F1_score = 1.0 /  (1.0 / precision + 1.0 / recall)
+    
+    return F1_score
 
 def compute_AUC(target_model: object, X_test: object, Y_test: object):
     """

@@ -60,13 +60,14 @@ def query_data_by_labels_and_types(data: object, labels: object, types: object, 
 
     Query data by labels and types
 
-    This function `group_data_by_labels_and_types` queries the dataset by user-specified labels and types to get the corresponding filtered data points.
+    This function `query_data_by_labels_and_types` queries the dataset by user-specified labels and types to get the corresponding filtered data points.
 
     @param data:
     @param labels:
     @param types:
-    @param filter_by_labels
+    @param filter_by_labels:
     @param filter_by_types:
+    @return filtered_data:
     """
     
     filtered_label_indexes = np.array(np.where(labels == filter_by_labels)[0])
