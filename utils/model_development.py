@@ -88,7 +88,6 @@ def create_optimizer(type: str) -> object:
         pass
     return optimizer
 
-@tf.function
 def ssim_loss(target, reference):
     """
     @author: Vo, Huynh Quang Nguyen
@@ -181,7 +180,7 @@ def train_reconstruction_model(training_phase: int, model: object,
         if (training_phase == 1):
             model = model
         elif (training_phase == 2):
-            model = load_model(model)
+            model = load_model(model, compile = False)
             for layer in model.layers:
                 layer.trainable = True    
 
@@ -191,7 +190,7 @@ def train_reconstruction_model(training_phase: int, model: object,
                 loss = training_metrics, optimizer = optimizer)
         weight_path = f'../models/weights/{model_name}_{version}.hdf5'
         checkpoint = ModelCheckpoint(weight_path, monitor = metric_to_monitor, 
-            verbose = 1, save_best_only = True, mode = 'max')
+            verbose = 1, save_best_only = True, mode = 'min')
         callbacks_list = [checkpoint]
         history = model.fit(X, Y, validation_split = validation_split_ratio, epochs = no_of_epochs, 
             batch_size = batch_size, callbacks = callbacks_list, verbose = 1)
@@ -429,11 +428,11 @@ def cae_VGG19(input_shape: tuple, weights: str, freeze_convolutional_base: bool,
         vgg19.trainable = True
     x = vgg19.output
     x = layers.Conv2DTranspose(filters = 512, kernel_size = (3, 3), strides = 2, 
-        activation = 'relu', padding = 'same', kernel_initializer = 'he_normal')(x)
+        activation = 'elu', padding = 'same', kernel_initializer = 'he_normal')(x)
     x = layers.Conv2DTranspose(filters = 512, kernel_size = (3, 3), strides = 2, 
-        activation = 'relu', padding = 'same', kernel_initializer = 'he_normal')(x)
+        activation = 'elu', padding = 'same', kernel_initializer = 'he_normal')(x)
     x = layers.Conv2DTranspose(filters = 256, kernel_size = (3, 3), strides = 2, 
-        activation = 'relu', padding = 'same', kernel_initializer = 'he_normal')(x)
+        activation = 'elu', padding = 'same', kernel_initializer = 'he_normal')(x)
     x = layers.Conv2DTranspose(filters = 128, kernel_size = (3, 3), strides = 2, 
         activation = 'elu', padding = 'same', kernel_initializer = 'he_normal')(x)
     x = layers.Conv2DTranspose(filters = 64, kernel_size = (3, 3), strides = 2, 
