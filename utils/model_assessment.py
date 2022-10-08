@@ -39,8 +39,8 @@ def compute_confusion_matrix(target_model: object, X_test: object, Y_test: objec
     model = models.load_model(target_model)
 
     Y_pred = model.predict(X_test).ravel()
-    Y_pred = np.where(Y_pred > defective_probability)
-    model_confusion_matrix = confusion_matrix(Y_test, Y_pred , normalize='pred')
+    Y_pred = np.where(Y_pred > defective_probability, 1.0, 0.0)
+    model_confusion_matrix = confusion_matrix(Y_test, Y_pred , normalize = 'pred')
     
     return model_confusion_matrix
 
