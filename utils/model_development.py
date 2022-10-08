@@ -7,7 +7,6 @@ from keras.models import load_model
 from keras.callbacks import ModelCheckpoint
 from keras.applications import VGG19, ResNet152V2, InceptionResNetV2, NASNetLarge
 from tensorflow.python.ops.numpy_ops import np_config
-from numba import cuda
 
 ###########
 # METHODS #
@@ -34,19 +33,19 @@ def configure_training_policy():
 
     return None
 
-def clear_memory():
-    """
-    @author: Vo, Huynh Quang Nguyen
+# def clear_memory():
+#     """
+#     @author: Vo, Huynh Quang Nguyen
 
-    Release all GPU memories.
+#     Release all GPU memories.
 
-    This function `clear_memory` releases all GPU memories by invoking and reseting currently in-use GPU identified by the `cuda` object in `Numba`.
-    """
+#     This function `clear_memory` releases all GPU memories by invoking and reseting currently in-use GPU identified by the `cuda` object in `Numba`.
+#     """
     
-    device = cuda.get_current_device()
-    device.reset()
+#     device = cuda.get_current_device()
+#     device.reset()
 
-    return None
+#     return None
 
 def data_augmentation() -> tuple[object, object, object, object]:
     """
