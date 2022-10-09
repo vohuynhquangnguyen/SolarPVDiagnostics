@@ -7,11 +7,11 @@
 6. val_accuracy: 0.7343 - val_precision: 0.9231 - val_recall: 0.5070
 7. val_accuracy: 0.7403 - val_precision: 0.9855 - val_recall: 0.4789
 8. val_accuracy: 0.7463 - val_precision: 0.9714 - val_recall: 0.4789
-9.
-10.
+9. val_accuracy: 0.7284 - val_precision: 0.9000 - val_recall: 0.5070
+10. val_accuracy: 0.7343 - val_precision: 0.9697 - val_recall: 0.4507
 
 ## Seed 2
-1. val_accuracy: 0.7463 - val_precision: 0.9853 - val_recall: 0.4718
+1. val_accuracy: 0.6746 - val_precision: 0.9298 - val_recall: 0.3419
 2. val_accuracy: 0.7313 - val_precision: 1.0000 - val_recall: 0.3873
 3.
 4.
