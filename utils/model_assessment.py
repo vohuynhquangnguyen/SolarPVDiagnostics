@@ -48,8 +48,7 @@ def compute_confusion_matrix(target_model: object, X_test: object, Y_test: objec
 # CLASSIFICATION MODEL #
 ########################
 
-def compute_CAM(target_model: object, final_convolution_layer: str, 
-    X_test: object):
+def compute_CAM(target_model: object, target_image: object, final_convolution_layer: str, feature_dim_1, feature_dim_2):
     """
     @author: Vo, Huynh Quang Nguyen
     """
@@ -58,19 +57,15 @@ def compute_CAM(target_model: object, final_convolution_layer: str,
 
     model = models.load_model(target_model)
     cam_model = models.Model(inputs = model.input, outputs = \
-            (model.get_layer(final_convolution_layer).output, model.get_layer('output').output))
-    features, results = cam_model.predict(X_test)
-    gap_weights = model.get_layer('output').get_weights()[0]
+            (model.get_layer(final_convolution_layer).output, model.layers[-1].output))
+    features, results = cam_model.predict(target_image[None])
+    gap_weights = model.layers[-1].get_weights()[0]
 
-    cams = []
-    
-    for idx in range(X_test.shape[0]):
-        image_features = features[idx, :, :, :]
-        prediction = np.argmax(results[idx])
-        cam_weights = gap_weights[:, prediction]
-        cam_features = \
-            sp.ndimage.zoom(image_features, (X_test.shape[1] / features.shape[1], X_test.shape[1] / features.shape[2], 1), order = 5)
-        cam_output = np.dot(cam_features, cam_weights)
-        cams.append(cam_output)
+    prediction = np.argmax(results)
+    cam_weights = gap_weights[:, prediction]
+    cam_features = sp.ndimage.zoom(features[0], (300 / feature_dim_1, 300 / feature_dim_2, 1), order = 2)
+    print(cam_features.shape)
+    cam_output = np.dot(cam_features, cam_weights)
+    print(cam_output.shape)
 
-    return np.array(cams)
+    return cam_output, prediction

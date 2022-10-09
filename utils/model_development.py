@@ -308,7 +308,7 @@ def resnet152v2(input_shape: tuple, weights: str, freeze_convolutional_base: boo
     x = layers.Dense(4096, 
         activation = 'relu', kernel_initializer = 'he_normal', name = 'dense2')(x)
     x = layers.Dropout(0.2, name = 'dropout2')(x)       
-    x = layers.Dense(512, 
+    x = layers.Dense(2048, 
         activation = 'relu', kernel_initializer = 'he_normal', name = 'dense3')(x)    
     outputs = layers.Dense(1, 
         activation = 'sigmoid', kernel_initializer = 'he_normal', name = 'outputs')(x)
@@ -352,7 +352,7 @@ def inception_resnetv2(input_shape: tuple, weights: str, freeze_convolutional_ba
     x = layers.Dense(4096, 
         activation = 'relu', kernel_initializer = 'he_normal', name = 'dense2')(x)
     x = layers.Dropout(0.2, name = 'dropout2')(x)       
-    x = layers.Dense(512, 
+    x = layers.Dense(2048, 
         activation = 'relu', kernel_initializer = 'he_normal', name = 'dense3')(x)    
     outputs = layers.Dense(1, 
         activation = 'sigmoid', kernel_initializer = 'he_normal', name = 'outputs')(x)
@@ -396,7 +396,7 @@ def nasnetlarge(input_shape: tuple, weights: str, freeze_convolutional_base: boo
     x = layers.Dense(4096, 
         activation = 'relu', kernel_initializer = 'he_normal', name = 'dense2')(x)
     x = layers.Dropout(0.2, name = 'dropout2')(x)       
-    x = layers.Dense(512, 
+    x = layers.Dense(2048, 
         activation = 'relu', kernel_initializer = 'he_normal', name = 'dense3')(x)    
     outputs = layers.Dense(1, 
         activation = 'sigmoid', kernel_initializer = 'he_normal', name = 'outputs')(x)
