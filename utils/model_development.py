@@ -447,3 +447,24 @@ def cae_VGG19(input_shape: tuple, weights: str, freeze_convolutional_base: bool,
         model.summary()
 
     return model
+
+def gan_generator():
+
+    return None
+def gan_discrimiator(input_shape: tuple, display_model_information: bool):
+    """
+    @author: Vo, Huynh Quang Nguyen
+    """
+    
+    inputs = layers.Input(shape = input_shape)
+    normalized_augmented = normalize_and_augmentation(inputs)
+    resized = layers.Resizing(height = 512, width = 512, interpolation = 'lanczos5')(normalized_augmented)
+    vgg19 = VGG19(include_top = False, input_tensor = resized, weights = 'imagenet')
+    vgg19.trainable = True
+    x = vgg19.output
+    x = layers.GlobalAveragePooling2D()(x)
+    outputs = layers.Dense(1, activation = 'sigmoid', name = 'outputs')
+
+    model = Model(inputs = inputs, outputs = outputs)
+
+    return model
