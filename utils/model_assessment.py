@@ -48,7 +48,7 @@ def compute_confusion_matrix(target_model: object, X_test: object, Y_test: objec
 # CLASSIFICATION MODEL #
 ########################
 
-def compute_CAM(target_model: object, target_image: object, final_convolution_layer: str, feature_dim_1, feature_dim_2):
+def compute_CAM(target_model: object, target_image: object, final_convolution_layer: str, feature_dims: tuple):
     """
     @author: Vo, Huynh Quang Nguyen
     """
@@ -60,10 +60,11 @@ def compute_CAM(target_model: object, target_image: object, final_convolution_la
             (model.get_layer(final_convolution_layer).output, model.layers[-1].output))
     features, results = cam_model.predict(target_image[None])
     gap_weights = model.layers[-1].get_weights()[0]
+    print(features.shape)
 
     prediction = np.argmax(results)
     cam_weights = gap_weights[:, prediction]
-    cam_features = sp.ndimage.zoom(features[0], (300 / feature_dim_1, 300 / feature_dim_2, 1), order = 2)
+    cam_features = sp.ndimage.zoom(features[0], (300 / feature_dims[0], 300 / feature_dims[1], 1), order = 2)
     print(cam_features.shape)
     cam_output = np.dot(cam_features, cam_weights)
     print(cam_output.shape)
