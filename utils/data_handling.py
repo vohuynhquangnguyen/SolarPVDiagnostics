@@ -87,7 +87,7 @@ def preprocess_data(data: object, labels: object, types: object) -> tuple[object
     This method preprocess_data applys several preprocessing methods to the given dataset such that:
     1. All grayscale images are transformed into pseudo-RGB images.
     2. All image classes are one-hot encoded (0.0 vs 1.0, respectively).
-    3. All data points are randomly shuffled.
+    3. All data points are randomly shuffled if prompted.
     """
 
     preprocessed_data = np.stack((data,) * 3, axis = -1)
