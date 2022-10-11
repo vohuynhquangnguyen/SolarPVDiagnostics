@@ -59,7 +59,12 @@
     	• Only data augmentation: Reduced FPR and FNR, but High BER (19.57%).
     	• Combine both: Overfitting is reduced, low BER (7.73%), low FNR (12.96%), tolerable slightly increase in FPR.
 
-8.
+8. Defect detection in atomic-resolution images via unsupervised learning with translational invariance
+    • Develop an approach for defect detection and classification based on one-class SVM.
+    • Introduce 2 schemes of image segmentation and data preprocessing.
+    	• Crop the neighborhood of the unique maximum/minimum intensity site in the projection of the unit cell/repeat unit.
+    	• Crop the Fourier filtered images and each cropped image is centered at the position of an atom column.
+    	• Patterson function used as a feature extraction descriptor to greatly reduce the principle components, and thus, variability in input space due to segmentation errors.
 
 9. Unsupervised Anomaly Detection for X-Ray Images
     • Use unsupervised methods to detect anomalies to evaluate X-ray images of hands. 
@@ -85,3 +90,20 @@
     	• Top-k (k = 200) loss values across all pixels does not improve the result.
     	• Best ROC-AUC score with 60.7% for α-GAN using the discriminator probability, and 57% for CAE with pixel-level anomaly scores for better intepretability.
     	• All methods with reconstruction loss were able to generate heatmaps of anomalous regions that non-experts can interpret.
+
+10. DFR: Deep Feature Reconstruction for Unsupervised Anomaly Segmentation
+    • Propose an unsupervised anomaly segmentation approach that can detect and segments out the anomalies in small and confined regions of images.
+    	• Develop a multi-scale regional feature generator to generate multiple spatial context-aware representations for every subregion.
+    	• Design a deep CAE to detect anomalies via fast feature reconstruction.
+    • Pipeline: 
+    	• Hierarchical image feature extraction: Use pre-trained CNN
+    	• Multi-scale regional feature generation: Design a regional feature extractor to generate discriminative multi-scale representations for every subregion of the image.
+    	• Deep feature reconstruction: Design a CAE to compress the multi-scale representation into a low-dimension latent space and reconstruct again.
+    	• Scoring and segmentation: Detect all possible anomalous regions based on reproduced regional feature map and its ground truth.
+    • Experiment:
+    	• Comparison: CAE-based approaches, GAN-based approach, VAE-grad, CNN-FD, ST
+    	• Architecture: 
+    		• VGG19 pretrained on ImageNet.
+    		• Regional feature generator: Align hierarchical CNN feature maps by nearest-neighbor interpolation, a mean filter with spatial size 4x4, stride 4.
+    		• CAE.
+    	• Evaluation: ROC-AUC, PRO-AUC
