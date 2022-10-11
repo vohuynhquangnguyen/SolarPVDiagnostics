@@ -4,9 +4,6 @@ from keras import models
 import keras.backend as K
 from sklearn.metrics import roc_curve, auc, confusion_matrix
 
-###########
-# METHODS #
-###########
 def compute_F1_score(precision: float, recall: float):
     """
     @author: Vo, Huynh Quang Nguyen
@@ -70,3 +67,17 @@ def compute_CAM(target_model: object, target_image: object, final_convolution_la
     print(cam_output.shape)
 
     return cam_output, prediction
+
+def get_accuracy_precision_recall_F1(history_path: str):
+    """
+    @author: Vo, Huynh Quang Nguyen
+    """
+    history = np.load(history_path, allow_pickle = True).item()
+    val_accuracy = np.max(history['val_accuracy'])
+    val_precision = history['val_precision'][np.argmax(val_accuracy)]
+    val_recall = history['val_recall'][np.argmax(val_accuracy)]
+    val_F1 = compute_F1_score(val_precision, val_recall)
+
+    val_results = [val_accuracy, val_precision, val_recall, val_F1]
+
+    return val_results
