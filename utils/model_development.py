@@ -2,7 +2,7 @@ import time
 import tensorflow as tf
 import numpy as np
 import keras.backend as K
-from keras import Model, Sequential, layers, regularizers, optimizers
+from keras import Model, Sequential, layers, optimizers
 from keras.models import load_model
 from keras.callbacks import ModelCheckpoint
 from keras.applications import VGG19, ResNet152V2, InceptionResNetV2, NASNetLarge
@@ -32,20 +32,6 @@ def configure_training_policy():
             print(error)
 
     return None
-
-# def clear_memory():
-#     """
-#     @author: Vo, Huynh Quang Nguyen
-
-#     Release all GPU memories.
-
-#     This function `clear_memory` releases all GPU memories by invoking and reseting currently in-use GPU identified by the `cuda` object in `Numba`.
-#     """
-    
-#     device = cuda.get_current_device()
-#     device.reset()
-
-#     return None
 
 def data_augmentation() -> tuple[object, object, object, object]:
     """
@@ -99,7 +85,7 @@ def ssim_loss(target, reference):
 
 def train_classification_model(training_phase: int, model: object, 
     optimizer: object, training_metrics: list, model_name: str, version: str, 
-    X: object, Y: object, metric_to_monitor: str, no_of_epochs: int, batch_size: int, validation_split_ratio: float) -> tuple[object, float]:
+    X: object, Y: object, metric_to_monitor: str, n_of_epochs: int, batch_size: int, validation_split_ratio: float) -> tuple[object, float]:
     """
     @author: Vo, Huynh Quang Nguyen
 
@@ -114,7 +100,7 @@ def train_classification_model(training_phase: int, model: object,
     @params `model_name`, `version`. Name of the model and its version.
     @params `X`, `Y`. Training data and labels.
     @param `metric_to_monitor`. Which metric to monitor to acquire the best model.
-    @params `no_of_epochs`, `batch_size`. Total number of epochs and batch size for this training session/
+    @params `n_of_epochs`, `batch_size`. Total number of epochs and batch size for this training session/
     @param `validation_split_ratio`: Split ratio to divide the training set into training and validation subsets.
     @return `history`. A dictionary containing model's training history including training accuracy, validation accuracy, etc. as function of epochs.
     @return `training_time`. Total elapsed training time.
@@ -138,7 +124,7 @@ def train_classification_model(training_phase: int, model: object,
         checkpoint = ModelCheckpoint(weight_path, monitor = metric_to_monitor, 
             verbose = 1, save_best_only = True, mode = 'max')
         callbacks_list = [checkpoint]
-        history = model.fit(X, Y, validation_split = validation_split_ratio, epochs = no_of_epochs, 
+        history = model.fit(X, Y, validation_split = validation_split_ratio, epochs = n_of_epochs, 
             batch_size = batch_size, callbacks = callbacks_list, verbose = 1)
         np.save(f'../models/history/{model_name}_{version}', history.history)
         ###
@@ -152,7 +138,7 @@ def train_classification_model(training_phase: int, model: object,
 
 def train_reconstruction_model(training_phase: int, model: object, 
     optimizer: object, training_metrics: list, model_name: str, version: str, 
-    X: object, Y: object, metric_to_monitor: str, no_of_epochs: int, batch_size: int, validation_split_ratio: float) -> tuple[object, float]:
+    X: object, Y: object, metric_to_monitor: str, n_of_epochs: int, batch_size: int, validation_split_ratio: float) -> tuple[object, float]:
     """
     @author: Vo, Huynh Quang Nguyen
 
@@ -167,7 +153,7 @@ def train_reconstruction_model(training_phase: int, model: object,
     @params `model_name`, `version`. Name of the model and its version.
     @params `X`, `Y`. Training data and labels.
     @param `metric_to_monitor`. Which metric to monitor to acquire the best model.
-    @params `no_of_epochs`, `batch_size`. Total number of epochs and batch size for this training session/
+    @params `n_of_epochs`, `batch_size`. Total number of epochs and batch size for this training session.
     @param `validation_split_ratio`: Split ratio to divide the training set into training and validation subsets.
     @return `history`. A dictionary containing model's training history including training accuracy, validation accuracy, etc. as function of epochs.
     @return `training_time`. Total elapsed training time.
@@ -191,7 +177,7 @@ def train_reconstruction_model(training_phase: int, model: object,
         checkpoint = ModelCheckpoint(weight_path, monitor = metric_to_monitor, 
             verbose = 1, save_best_only = True, mode = 'min')
         callbacks_list = [checkpoint]
-        history = model.fit(X, Y, validation_split = validation_split_ratio, epochs = no_of_epochs, 
+        history = model.fit(X, Y, validation_split = validation_split_ratio, epochs = n_of_epochs, 
             batch_size = batch_size, callbacks = callbacks_list, verbose = 1)
         np.save(f'../models/history/{model_name}_{version}', history.history)
         ###
@@ -202,6 +188,7 @@ def train_reconstruction_model(training_phase: int, model: object,
         print(error)
 
     return history, training_time
+
 
 #####################
 # SUPPORTING LAYERS #
