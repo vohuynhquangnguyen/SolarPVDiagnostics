@@ -107,3 +107,14 @@
     		• Regional feature generator: Align hierarchical CNN feature maps by nearest-neighbor interpolation, a mean filter with spatial size 4x4, stride 4.
     		• CAE.
     	• Evaluation: ROC-AUC, PRO-AUC
+
+11. Detecting Anomalous Structures by Convolutional Sparse Models
+    • Exploit convolutional sparse models to learn a dictionary of filters capturing structures of normal images, in order to check for anomalous regions.
+    • Highlight that local group sparsity of coefficient maps is essential in anomaly detection.
+    • Method:
+    	• Preprocess: Treat low and high-frequency components separately.
+    	• Compute convolutional sparse representation of high frequency components w.r.t a dictionary of filters.
+    	• Compute indicator vector by concatenation, and anomalies are patches yielding outliers in these vectors.	
+    • Experiment:
+     	• Monitor both low and high frequency components.
+    	• Exclusively monitor high frequency components. 
