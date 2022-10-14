@@ -94,7 +94,7 @@ def train_classification_model(training_phase: int, model: object,
     This function `train_classification_model` initializes a training session for a classification model. 
 
     @param `training_phase`. Designated phase of this training session. If the `training_phase = 1`, only the model's fully connected (Dense) layers are trained. If the `training_phase = 2`, all model's layers are trained.
-    @param `model`. Loaded model. If the `training_phase = 1`, the loaded model is a newly created model. If the `training_phase = 2`, the loaded model is a saved model at a specific location (e.g., `./models/weights/model.hdf5`).
+    @param `model`. Loaded model. If the `training_phase = 1`, the loaded model is a newly created model. If the `training_phase = 2`, the loaded model is a saved model at a specific location (e.g., `./models/weights/model.hd5`).
     @param `optimizer`. Optimization function for model training.
     @param `training_metrics`. List of metrics for model training. For classificiation tasks, the metrics are usually `['accuracy', 'Precision', 'Recall']`.
     @params `model_name`, `version`. Name of the model and its version.
@@ -120,7 +120,7 @@ def train_classification_model(training_phase: int, model: object,
         ###
         model.compile(\
                 loss = 'binary_crossentropy', optimizer = optimizer, metrics = training_metrics)
-        weight_path = f'../models/weights/{model_name}_{version}.hdf5'
+        weight_path = f'../models/weights/{model_name}_{version}.hd5'
         checkpoint = ModelCheckpoint(weight_path, monitor = metric_to_monitor, 
             verbose = 1, save_best_only = True, mode = 'max')
         callbacks_list = [checkpoint]
@@ -147,7 +147,7 @@ def train_reconstruction_model(training_phase: int, model: object,
     This function `train_reconstruction_model` initializes a training session for a simple reconstruction model (e.g., convolutional autoencoder or uNet). 
 
     @param `training_phase`. Designated phase of this training session. If the `training_phase = 1`, only the model's decoding layers are trained. If the `training_phase = 2`, all model's layers are trained.
-    @param `model`. Loaded model. If the `training_phase = 1`, the loaded model is a newly created model. If the `training_phase = 2`, the loaded model is a saved model at a specific location (e.g., `./models/weights/model.hdf5`).
+    @param `model`. Loaded model. If the `training_phase = 1`, the loaded model is a newly created model. If the `training_phase = 2`, the loaded model is a saved model at a specific location (e.g., `./models/weights/model.hd5`).
     @param `optimizer`. Optimization function for model training.
     @param `training_metrics`. List of metrics for model training. For reconstruction tasks, the metrics are usually `val_loss`.
     @params `model_name`, `version`. Name of the model and its version.
@@ -173,7 +173,7 @@ def train_reconstruction_model(training_phase: int, model: object,
         ###
         model.compile(\
                 loss = training_metrics, optimizer = optimizer)
-        weight_path = f'../models/weights/{model_name}_{version}.hdf5'
+        weight_path = f'../models/weights/{model_name}_{version}.hd5'
         checkpoint = ModelCheckpoint(weight_path, monitor = metric_to_monitor, 
             verbose = 1, save_best_only = True, mode = 'min')
         callbacks_list = [checkpoint]
@@ -188,7 +188,6 @@ def train_reconstruction_model(training_phase: int, model: object,
         print(error)
 
     return history, training_time
-
 
 #####################
 # SUPPORTING LAYERS #
