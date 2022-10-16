@@ -1,14 +1,26 @@
 import numpy as np
 import scipy as sp
+import tensorflow as tf
 from keras import models
+from tensorflow.python.ops.numpy_ops import np_config
 import keras.backend as K
 from sklearn.metrics import roc_curve, auc, confusion_matrix
+
+def ssim_loss(target, reference):
+    """
+    @author: Vo, Huynh Quang Nguyen
+    """
+    target = tf.cast(target, tf.float32)
+    reference = tf.cast(reference, tf.float32)
+    score = 1/2 - tf.reduce_mean(tf.image.ssim_multiscale(target, reference, max_val = 255.0))/2
+
+    return score
 
 def compute_F1_score(precision: float, recall: float):
     """
     @author: Vo, Huynh Quang Nguyen
     """
-    F1_score = 1.0 /  (1.0 / precision + 1.0 / recall)
+    F1_score = 2 * (precision * recall) / (precision + recall)
     
     return F1_score
 
@@ -81,3 +93,21 @@ def get_accuracy_precision_recall_F1(history_path: str):
     val_results = [val_accuracy, val_precision, val_recall, val_F1]
 
     return val_results
+
+########################
+# RECONSTRUCTION MODEL #
+########################
+def compute_heatmap(target_model: object, target_image: object):
+    """
+    @author: Vo, Huynh Quang Nguyen
+    """
+    K.clear_session()
+    np_config.enable_numpy_behavior()
+
+    model = models.load_model(target_model, custom_objects = {'ssim_loss': ssim_loss})
+    reconstructed_image = model.predict(target_image[None])
+
+    heatmap = np.subtract(target_image, reconstructed_image) ** 2
+    score_of_difference = ssim_loss(target_image, reconstructed_image)
+
+    return heatmap, reconstructed_image, tf.math(score_of_difference,4)

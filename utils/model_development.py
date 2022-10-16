@@ -79,7 +79,7 @@ def ssim_loss(target, reference):
     """
     target = tf.cast(target, tf.float32)
     reference = tf.cast(reference, tf.float32)
-    score = 1 - tf.reduce_mean(tf.image.ssim(target, reference, max_val = 255.0))
+    score = 1/2 - tf.reduce_mean(tf.image.ssim(target, reference, max_val = 255.0))/2
 
     return score
 
@@ -99,7 +99,7 @@ def train_classification_model(training_phase: int, model: object,
     @param `training_metrics`. List of metrics for model training. For classificiation tasks, the metrics are usually `['accuracy', 'Precision', 'Recall']`.
     @params `model_name`, `version`. Name of the model and its version.
     @params `X`, `Y`. Training data and labels.
-    @param `metric_to_monitor`. Which metric to monitor to acquire the best model.
+    @param `metric_to_monitor`. Which metric to monitor to acquire the best model. For classification models, the metric usually is `val_accuracy`.
     @params `n_of_epochs`, `batch_size`. Total number of epochs and batch size for this training session/
     @param `validation_split_ratio`: Split ratio to divide the training set into training and validation subsets.
     @return `history`. A dictionary containing model's training history including training accuracy, validation accuracy, etc. as function of epochs.
@@ -137,7 +137,7 @@ def train_classification_model(training_phase: int, model: object,
     return history, training_time
 
 def train_reconstruction_model(training_phase: int, model: object, 
-    optimizer: object, training_metrics: list, model_name: str, version: str, 
+    optimizer: object, model_name: str, version: str, 
     X: object, Y: object, metric_to_monitor: str, n_of_epochs: int, batch_size: int, validation_split_ratio: float) -> tuple[object, float]:
     """
     @author: Vo, Huynh Quang Nguyen
@@ -152,7 +152,7 @@ def train_reconstruction_model(training_phase: int, model: object,
     @param `training_metrics`. List of metrics for model training. For reconstruction tasks, the metrics are usually `val_loss`.
     @params `model_name`, `version`. Name of the model and its version.
     @params `X`, `Y`. Training data and labels.
-    @param `metric_to_monitor`. Which metric to monitor to acquire the best model.
+    @param `metric_to_monitor`. Which metric to monitor to acquire the best model. For reconstruction models, the metric usually is `val_loss`.
     @params `n_of_epochs`, `batch_size`. Total number of epochs and batch size for this training session.
     @param `validation_split_ratio`: Split ratio to divide the training set into training and validation subsets.
     @return `history`. A dictionary containing model's training history including training accuracy, validation accuracy, etc. as function of epochs.
@@ -172,7 +172,7 @@ def train_reconstruction_model(training_phase: int, model: object,
         start_time = time.time()
         ###
         model.compile(\
-                loss = training_metrics, optimizer = optimizer)
+                loss = ssim_loss, optimizer = optimizer)
         weight_path = f'../models/weights/{model_name}_{version}.hdf5'
         checkpoint = ModelCheckpoint(weight_path, monitor = metric_to_monitor, 
             verbose = 1, save_best_only = True, mode = 'min')
@@ -405,7 +405,7 @@ def cae_VGG19(input_shape: tuple, weights: str, freeze_convolutional_base: bool,
 
     inputs = layers.Input(shape = input_shape)
     normalized_augmented = normalize_and_augmentation(inputs)
-    resized = layers.Resizing(height = 512, width = 512, interpolation = 'lanczos5')(normalized_augmented)
+    resized = layers.Resizing(height = 576, width = 576, interpolation = 'bicubic')(normalized_augmented)
     vgg19 = VGG19(include_top = False, input_tensor = resized, weights = weights)
 
     if freeze_convolutional_base == True:
@@ -425,7 +425,7 @@ def cae_VGG19(input_shape: tuple, weights: str, freeze_convolutional_base: bool,
         activation = 'elu', padding = 'same', kernel_initializer = 'he_normal')(x)
     x = layers.Conv2D(filters = input_shape[2], kernel_size = (3, 3), activation = None, 
         padding = 'same', kernel_initializer = 'he_normal')(x)    
-    x = layers.Resizing(height = 300, width = 300, interpolation = 'lanczos5')(x)
+    x = layers.Resizing(height = 300, width = 300, interpolation = 'bicubic')(x)
     outputs = layers.Rescaling(255.0 / 1)(x)
 
     model = Model(inputs = inputs, outputs = outputs)
