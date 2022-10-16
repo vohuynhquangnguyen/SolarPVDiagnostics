@@ -435,23 +435,42 @@ def cae_VGG19(input_shape: tuple, weights: str, freeze_convolutional_base: bool,
 
     return model
 
-def gan_generator():
-
-    return None
-def gan_discrimiator(input_shape: tuple, display_model_information: bool):
+def uNet_VGG19(input_shape: tuple, weights: str, freeze_convolutional_base: bool,
+    display_model_information: bool):
     """
     @author: Vo, Huynh Quang Nguyen
     """
-    
+    K.clear_session()
+    selected_layers = ['']
     inputs = layers.Input(shape = input_shape)
     normalized_augmented = normalize_and_augmentation(inputs)
-    resized = layers.Resizing(height = 512, width = 512, interpolation = 'lanczos5')(normalized_augmented)
-    vgg19 = VGG19(include_top = False, input_tensor = resized, weights = 'imagenet')
-    vgg19.trainable = True
-    x = vgg19.output
-    x = layers.GlobalAveragePooling2D()(x)
-    outputs = layers.Dense(1, activation = 'sigmoid', name = 'outputs')
+    resized = layers.Resizing(height = 576, width = 576, interpolation = 'bicubic')(normalized_augmented)
+    vgg19 = VGG19(include_top = False, input_tensor = resized, weights = weights)
+
+    if freeze_convolutional_base == True:
+        vgg19.trainable = False
+    else:
+        vgg19.trainable = True
+
+    x = [vgg19.get_layer(layer).output for layer in selected_layers]
+    x = layers.Conv2DTranspose(filters = 512, kernel_size = (3, 3), strides = 2, 
+        activation = 'elu', padding = 'same', kernel_initializer = 'he_normal')(x)
+    x = layers.Conv2DTranspose(filters = 512, kernel_size = (3, 3), strides = 2, 
+        activation = 'elu', padding = 'same', kernel_initializer = 'he_normal')(x)
+    x = layers.Conv2DTranspose(filters = 256, kernel_size = (3, 3), strides = 2, 
+        activation = 'elu', padding = 'same', kernel_initializer = 'he_normal')(x)
+    x = layers.Conv2DTranspose(filters = 128, kernel_size = (3, 3), strides = 2, 
+        activation = 'elu', padding = 'same', kernel_initializer = 'he_normal')(x)
+    x = layers.Conv2DTranspose(filters = 64, kernel_size = (3, 3), strides = 2, 
+        activation = 'elu', padding = 'same', kernel_initializer = 'he_normal')(x)
+    x = layers.Conv2D(filters = input_shape[2], kernel_size = (3, 3), activation = None, 
+        padding = 'same', kernel_initializer = 'he_normal')(x)    
+    x = layers.Resizing(height = 300, width = 300, interpolation = 'bicubic')(x)
+    outputs = layers.Rescaling(255.0 / 1)(x)
 
     model = Model(inputs = inputs, outputs = outputs)
+     
+    if display_model_information == True:
+        model.summary()
 
     return model

@@ -1,3 +1,4 @@
+import cv2
 import numpy as np
 import scipy as sp
 import tensorflow as tf
@@ -14,7 +15,7 @@ def ssim_loss(target, reference):
     reference = tf.cast(reference, tf.float32)
     score = 1/2 - tf.reduce_mean(tf.image.ssim_multiscale(target, reference, max_val = 255.0))/2
 
-    return score
+    return np.round(score.numpy(), 4)
 
 def compute_F1_score(precision: float, recall: float):
     """
@@ -107,7 +108,9 @@ def compute_heatmap(target_model: object, target_image: object):
     model = models.load_model(target_model, custom_objects = {'ssim_loss': ssim_loss})
     reconstructed_image = model.predict(target_image[None])
 
-    heatmap = np.subtract(target_image, reconstructed_image) ** 2
+    heatmap = np.subtract(target_image, reconstructed_image[0]) ** 2
+    heatmap = cv2.applyColorMap(heatmap.astype('uint8'), cv2.COLORMAP_JET)
+    heatmap = cv2.medianBlur(heatmap, 11)
     score_of_difference = ssim_loss(target_image, reconstructed_image)
 
-    return heatmap, reconstructed_image, tf.math(score_of_difference,4)
+    return heatmap, reconstructed_image, score_of_difference
