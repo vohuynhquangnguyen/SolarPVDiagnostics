@@ -79,7 +79,7 @@ def ssim_loss(target, reference):
     """
     target = tf.cast(target, tf.float32)
     reference = tf.cast(reference, tf.float32)
-    score = 1 - tf.reduce_mean(tf.image.ssim(target, reference, max_val = 255.0))
+    score = 1/2 - tf.reduce_mean(tf.image.ssim(target, reference, max_val = 255.0))/2
 
     return score
 
@@ -94,12 +94,12 @@ def train_classification_model(training_phase: int, model: object,
     This function `train_classification_model` initializes a training session for a classification model. 
 
     @param `training_phase`. Designated phase of this training session. If the `training_phase = 1`, only the model's fully connected (Dense) layers are trained. If the `training_phase = 2`, all model's layers are trained.
-    @param `model`. Loaded model. If the `training_phase = 1`, the loaded model is a newly created model. If the `training_phase = 2`, the loaded model is a saved model at a specific location (e.g., `./models/weights/model.hd5`).
+    @param `model`. Loaded model. If the `training_phase = 1`, the loaded model is a newly created model. If the `training_phase = 2`, the loaded model is a saved model at a specific location (e.g., `./models/weights/model.hdf5`).
     @param `optimizer`. Optimization function for model training.
     @param `training_metrics`. List of metrics for model training. For classificiation tasks, the metrics are usually `['accuracy', 'Precision', 'Recall']`.
     @params `model_name`, `version`. Name of the model and its version.
     @params `X`, `Y`. Training data and labels.
-    @param `metric_to_monitor`. Which metric to monitor to acquire the best model.
+    @param `metric_to_monitor`. Which metric to monitor to acquire the best model. For classification models, the metric usually is `val_accuracy`.
     @params `n_of_epochs`, `batch_size`. Total number of epochs and batch size for this training session/
     @param `validation_split_ratio`: Split ratio to divide the training set into training and validation subsets.
     @return `history`. A dictionary containing model's training history including training accuracy, validation accuracy, etc. as function of epochs.
@@ -120,7 +120,7 @@ def train_classification_model(training_phase: int, model: object,
         ###
         model.compile(\
                 loss = 'binary_crossentropy', optimizer = optimizer, metrics = training_metrics)
-        weight_path = f'../models/weights/{model_name}_{version}.hd5'
+        weight_path = f'../models/weights/{model_name}_{version}.hdf5'
         checkpoint = ModelCheckpoint(weight_path, monitor = metric_to_monitor, 
             verbose = 1, save_best_only = True, mode = 'max')
         callbacks_list = [checkpoint]
@@ -137,7 +137,7 @@ def train_classification_model(training_phase: int, model: object,
     return history, training_time
 
 def train_reconstruction_model(training_phase: int, model: object, 
-    optimizer: object, training_metrics: list, model_name: str, version: str, 
+    optimizer: object, model_name: str, version: str, 
     X: object, Y: object, metric_to_monitor: str, n_of_epochs: int, batch_size: int, validation_split_ratio: float) -> tuple[object, float]:
     """
     @author: Vo, Huynh Quang Nguyen
@@ -147,12 +147,12 @@ def train_reconstruction_model(training_phase: int, model: object,
     This function `train_reconstruction_model` initializes a training session for a simple reconstruction model (e.g., convolutional autoencoder or uNet). 
 
     @param `training_phase`. Designated phase of this training session. If the `training_phase = 1`, only the model's decoding layers are trained. If the `training_phase = 2`, all model's layers are trained.
-    @param `model`. Loaded model. If the `training_phase = 1`, the loaded model is a newly created model. If the `training_phase = 2`, the loaded model is a saved model at a specific location (e.g., `./models/weights/model.hd5`).
+    @param `model`. Loaded model. If the `training_phase = 1`, the loaded model is a newly created model. If the `training_phase = 2`, the loaded model is a saved model at a specific location (e.g., `./models/weights/model.hdf5`).
     @param `optimizer`. Optimization function for model training.
     @param `training_metrics`. List of metrics for model training. For reconstruction tasks, the metrics are usually `val_loss`.
     @params `model_name`, `version`. Name of the model and its version.
     @params `X`, `Y`. Training data and labels.
-    @param `metric_to_monitor`. Which metric to monitor to acquire the best model.
+    @param `metric_to_monitor`. Which metric to monitor to acquire the best model. For reconstruction models, the metric usually is `val_loss`.
     @params `n_of_epochs`, `batch_size`. Total number of epochs and batch size for this training session.
     @param `validation_split_ratio`: Split ratio to divide the training set into training and validation subsets.
     @return `history`. A dictionary containing model's training history including training accuracy, validation accuracy, etc. as function of epochs.
@@ -172,8 +172,8 @@ def train_reconstruction_model(training_phase: int, model: object,
         start_time = time.time()
         ###
         model.compile(\
-                loss = training_metrics, optimizer = optimizer)
-        weight_path = f'../models/weights/{model_name}_{version}.hd5'
+                loss = ssim_loss, optimizer = optimizer)
+        weight_path = f'../models/weights/{model_name}_{version}.hdf5'
         checkpoint = ModelCheckpoint(weight_path, monitor = metric_to_monitor, 
             verbose = 1, save_best_only = True, mode = 'min')
         callbacks_list = [checkpoint]
@@ -188,6 +188,7 @@ def train_reconstruction_model(training_phase: int, model: object,
         print(error)
 
     return history, training_time
+
 
 #####################
 # SUPPORTING LAYERS #
@@ -404,7 +405,7 @@ def cae_VGG19(input_shape: tuple, weights: str, freeze_convolutional_base: bool,
 
     inputs = layers.Input(shape = input_shape)
     normalized_augmented = normalize_and_augmentation(inputs)
-    resized = layers.Resizing(height = 512, width = 512, interpolation = 'lanczos5')(normalized_augmented)
+    resized = layers.Resizing(height = 576, width = 576, interpolation = 'bicubic')(normalized_augmented)
     vgg19 = VGG19(include_top = False, input_tensor = resized, weights = weights)
 
     if freeze_convolutional_base == True:
@@ -424,7 +425,7 @@ def cae_VGG19(input_shape: tuple, weights: str, freeze_convolutional_base: bool,
         activation = 'elu', padding = 'same', kernel_initializer = 'he_normal')(x)
     x = layers.Conv2D(filters = input_shape[2], kernel_size = (3, 3), activation = None, 
         padding = 'same', kernel_initializer = 'he_normal')(x)    
-    x = layers.Resizing(height = 300, width = 300, interpolation = 'lanczos5')(x)
+    x = layers.Resizing(height = 300, width = 300, interpolation = 'bicubic')(x)
     outputs = layers.Rescaling(255.0 / 1)(x)
 
     model = Model(inputs = inputs, outputs = outputs)
@@ -434,23 +435,42 @@ def cae_VGG19(input_shape: tuple, weights: str, freeze_convolutional_base: bool,
 
     return model
 
-def gan_generator():
-
-    return None
-def gan_discrimiator(input_shape: tuple, display_model_information: bool):
+def uNet_VGG19(input_shape: tuple, weights: str, freeze_convolutional_base: bool,
+    display_model_information: bool):
     """
     @author: Vo, Huynh Quang Nguyen
     """
-    
+    K.clear_session()
+    selected_layers = ['']
     inputs = layers.Input(shape = input_shape)
     normalized_augmented = normalize_and_augmentation(inputs)
-    resized = layers.Resizing(height = 512, width = 512, interpolation = 'lanczos5')(normalized_augmented)
-    vgg19 = VGG19(include_top = False, input_tensor = resized, weights = 'imagenet')
-    vgg19.trainable = True
-    x = vgg19.output
-    x = layers.GlobalAveragePooling2D()(x)
-    outputs = layers.Dense(1, activation = 'sigmoid', name = 'outputs')
+    resized = layers.Resizing(height = 576, width = 576, interpolation = 'bicubic')(normalized_augmented)
+    vgg19 = VGG19(include_top = False, input_tensor = resized, weights = weights)
+
+    if freeze_convolutional_base == True:
+        vgg19.trainable = False
+    else:
+        vgg19.trainable = True
+
+    x = [vgg19.get_layer(layer).output for layer in selected_layers]
+    x = layers.Conv2DTranspose(filters = 512, kernel_size = (3, 3), strides = 2, 
+        activation = 'elu', padding = 'same', kernel_initializer = 'he_normal')(x)
+    x = layers.Conv2DTranspose(filters = 512, kernel_size = (3, 3), strides = 2, 
+        activation = 'elu', padding = 'same', kernel_initializer = 'he_normal')(x)
+    x = layers.Conv2DTranspose(filters = 256, kernel_size = (3, 3), strides = 2, 
+        activation = 'elu', padding = 'same', kernel_initializer = 'he_normal')(x)
+    x = layers.Conv2DTranspose(filters = 128, kernel_size = (3, 3), strides = 2, 
+        activation = 'elu', padding = 'same', kernel_initializer = 'he_normal')(x)
+    x = layers.Conv2DTranspose(filters = 64, kernel_size = (3, 3), strides = 2, 
+        activation = 'elu', padding = 'same', kernel_initializer = 'he_normal')(x)
+    x = layers.Conv2D(filters = input_shape[2], kernel_size = (3, 3), activation = None, 
+        padding = 'same', kernel_initializer = 'he_normal')(x)    
+    x = layers.Resizing(height = 300, width = 300, interpolation = 'bicubic')(x)
+    outputs = layers.Rescaling(255.0 / 1)(x)
 
     model = Model(inputs = inputs, outputs = outputs)
+     
+    if display_model_information == True:
+        model.summary()
 
     return model
