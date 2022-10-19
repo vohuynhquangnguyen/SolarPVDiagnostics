@@ -58,6 +58,7 @@ def compute_confusion_matrix(target_model: object, X_test: object, Y_test: objec
 # CLASSIFICATION MODEL #
 ########################
 
+
 def compute_CAM(target_model: object, target_image: object, final_convolution_layer: str, feature_dims: tuple):
     """
     @author: Vo, Huynh Quang Nguyen
