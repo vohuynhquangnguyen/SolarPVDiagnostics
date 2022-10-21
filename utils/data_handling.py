@@ -7,41 +7,18 @@ import pandas as pd
 ###########
 # METHODS #
 ###########
-def load_images_from_directory(images_directory: str, images_format: str) -> object:
-    """
-    @author: Vo Huynh Quang Nguyen
-    
-    Load all images having the same format in a directory.
-
-    This method `load_images_from_directory` loads all images having the same format in a directory by leveraging the Unix style pathname pattern expansion.
-    
-    @param `images_directory`: Unix style pathname. Default value is `./dataset/images`
-    @param `images_format` : Unix style user-specific image format (`*.png`, `*.jpg`, `*.bmp`, etc.).
-    @return `images`: Array containing loaded images.
-    """
-
-    path = os.path.join(images_directory, images_format)
-    image_fnames = glob.glob(path)
-    
-    images = []
-    for _ , image_fname in enumerate(image_fnames):
-        image = cv2.imread(image_fname, cv2.IMREAD_UNCHANGED)
-        images.append(image)
-        
-    return np.array(images)
-
 def load_data_from_file(file_path: str) -> tuple[object, object, object]:
     """
     @author: Vo, Huynh Quang Nguyen
     
-    Load data, labels, and other features from a file. 
+    Load data, labels, and types from a file. 
 
-    This method `load_data_from_file` loads the dataset from a .txt or .csv file containing all necessary information including `<path/to/data_points>`, `<data_points_class>`, and `<other/features>`.
+    This method `load_data_from_file` loads the ELPV dataset provided by Buerhop et al. from a .txt or .csv file containing all necessary information including `<path/to/data_points>`, `<data_points_class>`, and `<data_points_types>`.
 
     @param `file_path`: User-specified path to file containing dataset information.
-    @return `cell_images`: Array containing loaded images.
-    @return `cell_quality`: Array containing corresponding class.
-    @return `cell_types`: Array containing corresponding type.
+    @return `cell_images`: Array containing  cell images.
+    @return `cell_quality`: Array containing cell defective probabilities.
+    @return `cell_types`: Array containing cell types.
     """
     metadata = pd.read_csv(file_path, delim_whitespace = True, header = None)
     metadata.columns = ['cell_path', 'cell_quality', 'cell_types']
@@ -82,12 +59,19 @@ def preprocess_data(data: object, labels: object, types: object) -> tuple[object
     """
     @author: Vo, Huynh Quang Nguyen
 
-    Preprocess the data for classification models.
+    Preprocess the ELPV data provided by Buerhop et al. for classification models.
 
-    This method preprocess_data applys several preprocessing methods to the given dataset such that:
+    This method `preprocess_data` applies several preprocessing methods to the ELPV dataset such that:
     1. All grayscale images are transformed into pseudo-RGB images.
     2. All image classes are one-hot encoded (0.0 vs 1.0, respectively).
     3. All data points are randomly shuffled if prompted.
+
+    @param `data`: Array containing cell images.
+    @param `labels`: Array containing cell defective probabilities.
+    @param `types`: Array containing cell types.
+    @return `X`: Array containing preprocessed cell images.
+    @return `Y`: Array containing encoded cell defective probabilities.
+    @return `Z`: Array containing preprocessed cell types.    
     """
 
     preprocessed_data = np.stack((data,) * 3, axis = -1)

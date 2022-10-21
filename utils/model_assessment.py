@@ -57,7 +57,32 @@ def compute_confusion_matrix(target_model: object, X_test: object, Y_test: objec
 ########################
 # CLASSIFICATION MODEL #
 ########################
+def get_validation_accuracy_precision_recall_F1(history_path: str):
+    """
+    @author: Vo, Huynh Quang Nguyen
+    """
+    history = np.load(history_path, allow_pickle = True).item()
+    val_accuracy = np.max(history['val_accuracy'])
+    val_precision = history['val_precision'][np.argmax(val_accuracy)]
+    val_recall = history['val_recall'][np.argmax(val_accuracy)]
+    val_F1 = compute_F1_score(val_precision, val_recall)
 
+    val_results = [val_accuracy, val_precision, val_recall, val_F1]
+
+    return val_results
+
+def get_test_accuracy_precision_recall_F1(target_model: str, X_test: object, Y_test: object):
+    """
+    @author: Vo, Huynh Quang Nguyen
+    """
+    model = models.load_model(target_model)
+    test = model.evaluate(X_test, Y_test)
+    print(test)
+    
+    # test_F1 = compute_F1_score(test_precision, test_recall)
+    # test_results = [test_accuracy, test_precision, test_recall, test_F1]
+
+    return None
 
 def compute_CAM(target_model: object, target_image: object, final_convolution_layer: str, feature_dims: tuple):
     """
@@ -82,19 +107,7 @@ def compute_CAM(target_model: object, target_image: object, final_convolution_la
 
     return cam_output, prediction
 
-def get_accuracy_precision_recall_F1(history_path: str):
-    """
-    @author: Vo, Huynh Quang Nguyen
-    """
-    history = np.load(history_path, allow_pickle = True).item()
-    val_accuracy = np.max(history['val_accuracy'])
-    val_precision = history['val_precision'][np.argmax(val_accuracy)]
-    val_recall = history['val_recall'][np.argmax(val_accuracy)]
-    val_F1 = compute_F1_score(val_precision, val_recall)
 
-    val_results = [val_accuracy, val_precision, val_recall, val_F1]
-
-    return val_results
 
 ########################
 # RECONSTRUCTION MODEL #
