@@ -57,11 +57,19 @@ def compute_confusion_matrix(target_model: object, X_test: object, Y_test: objec
 ########################
 # CLASSIFICATION MODEL #
 ########################
-def get_validation_accuracy_precision_recall_F1(history_path: str):
+def get_validation_accuracy_precision_recall_F1(taget_history: str):
     """
     @author: Vo, Huynh Quang Nguyen
+
+    Extract validation scores from an epoch containing the highest validation accuracy.
+
+    This `get_validation_accuracy_precision_recall_F1` method extracts validation scores from an epoch containing the highest validation accuracy during the model's training process.
+    
+    @param `taget_history`: Targeted model's history generated from the training process.
+    @return `val_results`: List containing the extracted validation scores (accuracy, precision, recall, and F1-score).
     """
-    history = np.load(history_path, allow_pickle = True).item()
+
+    history = np.load(taget_history, allow_pickle = True).item()
     val_accuracy = np.max(history['val_accuracy'])
     val_precision = history['val_precision'][np.argmax(val_accuracy)]
     val_recall = history['val_recall'][np.argmax(val_accuracy)]

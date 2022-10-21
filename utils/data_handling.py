@@ -4,16 +4,13 @@ import cv2
 import numpy as np
 import pandas as pd
 
-###########
-# METHODS #
-###########
-def load_data_from_file(file_path: str) -> tuple[object, object, object]:
+def load_data_from_file(file_path: str):
     """
     @author: Vo, Huynh Quang Nguyen
     
     Load data, labels, and types from a file. 
 
-    This method `load_data_from_file` loads the ELPV dataset provided by Buerhop et al. from a .txt or .csv file containing all necessary information including `<path/to/data_points>`, `<data_points_class>`, and `<data_points_types>`.
+    This `load_data_from_file` method loads the ELPV dataset provided by Buerhop et al. from a .txt or .csv file containing all necessary information including `<path/to/data_points>`, `<data_points_class>`, and `<data_points_types>`.
 
     @param `file_path`: User-specified path to file containing dataset information.
     @return `cell_images`: Array containing  cell images.
@@ -37,7 +34,7 @@ def query_data_by_labels_and_types(data: object, labels: object, types: object, 
 
     Query data by labels and types
 
-    This function `query_data_by_labels_and_types` queries the dataset by user-specified labels and types to get the corresponding filtered data points.
+    This `query_data_by_labels_and_types` method queries the dataset by user-specified labels and types to get the corresponding filtered data points.
 
     @param data:
     @param labels:
@@ -54,14 +51,13 @@ def query_data_by_labels_and_types(data: object, labels: object, types: object, 
     
     return filtered_data
 
-def preprocess_data(data: object, labels: object, types: object) -> tuple[object, object, 
-    object]:
+def preprocess_data(data: object, labels: object, types: object):
     """
     @author: Vo, Huynh Quang Nguyen
 
     Preprocess the ELPV data provided by Buerhop et al. for classification models.
 
-    This method `preprocess_data` applies several preprocessing methods to the ELPV dataset such that:
+    This `preprocess_data` method applies several preprocessing methods to the ELPV dataset such that:
     1. All grayscale images are transformed into pseudo-RGB images.
     2. All image classes are one-hot encoded (0.0 vs 1.0, respectively).
     3. All data points are randomly shuffled if prompted.
