@@ -83,14 +83,13 @@ def get_test_accuracy_precision_recall_F1(target_model: str, X_test: object, Y_t
     """
     @author: Vo, Huynh Quang Nguyen
     """
+    K.clear_session()
     model = models.load_model(target_model)
-    test = model.evaluate(X_test, Y_test)
-    print(test)
-    
-    # test_F1 = compute_F1_score(test_precision, test_recall)
-    # test_results = [test_accuracy, test_precision, test_recall, test_F1]
+    _ , test_accuracy, test_precision, test_recall = model.evaluate(X_test, Y_test)
+    test_F1 = compute_F1_score(test_precision, test_recall)
+    test_results = [test_accuracy, test_precision, test_recall, test_F1]
 
-    return None
+    return test_results
 
 def compute_CAM(target_model: object, target_image: object, final_convolution_layer: str, feature_dims: tuple):
     """
@@ -113,7 +112,7 @@ def compute_CAM(target_model: object, target_image: object, final_convolution_la
     cam_output = np.dot(cam_features, cam_weights)
     print(cam_output.shape)
 
-    return cam_output, prediction
+    return cam_output, results
 
 
 
